@@ -1,0 +1,44 @@
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.MainClientForm.resources
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.csproj.GenerateResource.cache
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.AssemblyInfoInputs.cache
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.AssemblyInfo.cs
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.csproj.CoreCompileInputs.cache
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Client.exe
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Client.deps.json
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Client.runtimeconfig.json
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Client.dll
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Client.pdb
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Common.dll
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Common.pdb
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.csproj.AssemblyReference.cache
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.csproj.Up2Date
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.dll
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\refint\Client.dll
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.pdb
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.genruntimeconfig.cache
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\obj\Debug\net8.0-windows\ref\Client.dll
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\bin\Debug\net8.0-windows\System.Management.dll
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Client\bin\Debug\net8.0-windows\runtimes\win\lib\net7.0\System.Management.dll
+E:\PBL\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Client.exe
+E:\PBL\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Client.deps.json
+E:\PBL\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Client.runtimeconfig.json
+E:\PBL\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Client.dll
+E:\PBL\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Client.pdb
+E:\PBL\PBL4_BKDN\Client\bin\Debug\net8.0-windows\System.Management.dll
+E:\PBL\PBL4_BKDN\Client\bin\Debug\net8.0-windows\runtimes\win\lib\net7.0\System.Management.dll
+E:\PBL\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Common.dll
+E:\PBL\PBL4_BKDN\Client\bin\Debug\net8.0-windows\Common.pdb
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.csproj.AssemblyReference.cache
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.MainClientForm.resources
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.csproj.GenerateResource.cache
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.GeneratedMSBuildEditorConfig.editorconfig
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.AssemblyInfoInputs.cache
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.AssemblyInfo.cs
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.csproj.CoreCompileInputs.cache
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.csproj.Up2Date
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.dll
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\refint\Client.dll
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.pdb
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\Client.genruntimeconfig.cache
+E:\PBL\PBL4_BKDN\Client\obj\Debug\net8.0-windows\ref\Client.dll

@@ -1,0 +1,22 @@
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\obj\Debug\net8.0\Common.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\obj\Debug\net8.0\Common.AssemblyInfoInputs.cache
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\obj\Debug\net8.0\Common.AssemblyInfo.cs
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\obj\Debug\net8.0\Common.csproj.CoreCompileInputs.cache
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\bin\Debug\net8.0\Common.deps.json
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\bin\Debug\net8.0\Common.dll
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\bin\Debug\net8.0\Common.pdb
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\obj\Debug\net8.0\Common.dll
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\obj\Debug\net8.0\refint\Common.dll
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\obj\Debug\net8.0\Common.pdb
+C:\Users\Kim Tai\source\repos\PBL4_BKDN\Common\obj\Debug\net8.0\ref\Common.dll
+E:\PBL\PBL4_BKDN\Common\bin\Debug\net8.0\Common.deps.json
+E:\PBL\PBL4_BKDN\Common\bin\Debug\net8.0\Common.dll
+E:\PBL\PBL4_BKDN\Common\bin\Debug\net8.0\Common.pdb
+E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\Common.GeneratedMSBuildEditorConfig.editorconfig
+E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\Common.AssemblyInfoInputs.cache
+E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\Common.AssemblyInfo.cs
+E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\Common.csproj.CoreCompileInputs.cache
+E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\Common.dll
+E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\refint\Common.dll
+E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\Common.pdb
+E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\ref\Common.dll

@@ -24,13 +24,14 @@ namespace Server.Forms
         private readonly PacketHandler _packetHandler;
         private readonly SystemInfoHandler _systemInfoHandler = new SystemInfoHandler();
         private readonly RemoteShellHandler _remoteShellHandler = new RemoteShellHandler();
+        private readonly FileManagerHandler _fileManagerHandler = new FileManagerHandler();
         private readonly CommandService _commandService = new CommandService();
         private readonly BindingSource _clientsBinding = new BindingSource();
 
         public MainServerForm()
         {
             InitializeComponent();
-            _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse);
+            _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse, OnFileManagerResponse);
             InitializeClientsGrid();
         }
 
@@ -72,6 +73,15 @@ namespace Server.Forms
                 _remoteShellHandler.SaveLastResponses(response.ClientId, response);
             }
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] RemoteShellResponse from {response.ClientId}");
+        }
+
+        private void OnFileManagerResponse(FileManagerResponse response)
+        {
+            if (!string.IsNullOrEmpty(response.ClientId))
+            {
+                _fileManagerHandler.SaveLastResponse(response.ClientId, response);
+            }
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] FileManagerResponse from {response.ClientId}");
         }
 
         private void StartServer(int port)
@@ -169,6 +179,16 @@ namespace Server.Forms
             var remoteShellForm = RemoteShellForm.CreateNewOrGetExisting(conn, _remoteShellHandler);
             remoteShellForm.Show();
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened Remote Shell for {conn.Id}");
+        }
+
+        private void fileManagerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var conn = GetSelectedConnection();
+            if (conn == null) return;
+
+            var fileManagerForm = FileManagerForm.CreateNewOrGetExisting(conn, _fileManagerHandler);
+            fileManagerForm.Show();
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened File Manager for {conn.Id}");
         }
 
         private void OpenIfCached(string clientId, bool hardware = false, bool software = false, bool network = false)

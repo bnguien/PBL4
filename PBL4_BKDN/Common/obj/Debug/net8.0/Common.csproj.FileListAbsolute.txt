@@ -20,3 +20,15 @@ E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\Common.dll
 E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\refint\Common.dll
 E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\Common.pdb
 E:\PBL\PBL4_BKDN\Common\obj\Debug\net8.0\ref\Common.dll
+D:\2025-2026\PBL4\PBL4_BKDN\Common\bin\Debug\net8.0\Common.deps.json
+D:\2025-2026\PBL4\PBL4_BKDN\Common\bin\Debug\net8.0\Common.dll
+D:\2025-2026\PBL4\PBL4_BKDN\Common\bin\Debug\net8.0\Common.pdb
+D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.GeneratedMSBuildEditorConfig.editorconfig
+D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.AssemblyInfoInputs.cache
+D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.AssemblyInfo.cs
+D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.csproj.CoreCompileInputs.cache
+D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.sourcelink.json
+D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.dll
+D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\refint\Common.dll
+D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.pdb
+D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\ref\Common.dll

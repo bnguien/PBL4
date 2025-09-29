@@ -8,7 +8,9 @@ namespace Common.Enums
         SystemInfoRequest = 10,
         SystemInfoResponse = 11,
         RemoteShellRequest = 12,
-        RemoteShellResponse = 13
+        RemoteShellResponse = 13,
+        FileManagerRequest = 14,
+        FileManagerResponse = 15
 
     }
 }

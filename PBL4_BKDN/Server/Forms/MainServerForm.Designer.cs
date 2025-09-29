@@ -43,6 +43,7 @@
             softwareInfoToolStripMenuItem = new ToolStripMenuItem();
             networkInfoToolStripMenuItem = new ToolStripMenuItem();
             remoteShellToolStripMenuItem = new ToolStripMenuItem();
+            fileManagerToolStripMenuItem = new ToolStripMenuItem();
             rightPanel = new Panel();
             txtLog = new TextBox();
             cboLogFilter = new ComboBox();
@@ -158,7 +159,7 @@
             // ctxClients
             // 
             ctxClients.ImageScalingSize = new Size(20, 20);
-            ctxClients.Items.AddRange(new ToolStripItem[] { systemInfoToolStripMenuItem, remoteShellToolStripMenuItem });
+            ctxClients.Items.AddRange(new ToolStripItem[] { systemInfoToolStripMenuItem, remoteShellToolStripMenuItem, fileManagerToolStripMenuItem });
             ctxClients.Name = "ctxClients";
             ctxClients.Size = new Size(156, 28);
             // 
@@ -196,6 +197,13 @@
             remoteShellToolStripMenuItem.Size = new Size(155, 24);
             remoteShellToolStripMenuItem.Text = "Remote Shell";
             remoteShellToolStripMenuItem.Click += remoteShellToolStripMenuItem_Click;
+            // 
+            // fileManagerToolStripMenuItem
+            // 
+            fileManagerToolStripMenuItem.Name = "fileManagerToolStripMenuItem";
+            fileManagerToolStripMenuItem.Size = new Size(155, 24);
+            fileManagerToolStripMenuItem.Text = "File Manager";
+            fileManagerToolStripMenuItem.Click += fileManagerToolStripMenuItem_Click;
             // 
             // rightPanel
             // 
@@ -277,6 +285,7 @@
         private System.Windows.Forms.ToolStripMenuItem softwareInfoToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem networkInfoToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem remoteShellToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fileManagerToolStripMenuItem;
         private System.Windows.Forms.Panel rightPanel;
         private System.Windows.Forms.ComboBox cboLogFilter;
         private System.Windows.Forms.Label lblLogFilter;

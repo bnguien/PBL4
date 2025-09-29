@@ -21,6 +21,7 @@ namespace Client
         private PacketHandler? _packetHandler;
         private SystemInfoHandler? _systemInfoHandler;
         private RemoteShellHandler? _remoteShellHandler;
+        private FileManagerHandler? _fileManagerHandler;
 
         public MainClientForm()
         {
@@ -33,11 +34,14 @@ namespace Client
             _connection = new ClientConnection();
             var sysService = new SystemInfoService();
             var remoteShellService = new RemoteShellService();
+            var fileManagerService = new FileManagerService();
             _systemInfoHandler = new SystemInfoHandler(sysService, _connection);
-            _remoteShellHandler = new RemoteShellHandler(remoteShellService,_connection);
+            _remoteShellHandler = new RemoteShellHandler(remoteShellService, _connection);
+            _fileManagerHandler = new FileManagerHandler(fileManagerService, _connection);
             _packetHandler = new PacketHandler(
                onSystemInfoRequest: req => _ = _systemInfoHandler!.HandleAsync(req),
-               onRemoteShellRequest: sreq => _ = _remoteShellHandler!.HandleAsync(sreq)
+               onRemoteShellRequest: sreq => _ = _remoteShellHandler!.HandleAsync(sreq),
+               onFileManagerRequest: freq => _ = _fileManagerHandler!.HandleAsync(freq)
            );
             _connection.OnLineReceived += line => _packetHandler.HandleLine(line);
         }

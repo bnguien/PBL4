@@ -9,11 +9,13 @@ namespace Client.Networking
     {
         private readonly Action<SystemInfoRequest> _onSystemInfoRequest;
         private readonly Action<RemoteShellRequest> _onRemoteShellRequest;
+        private readonly Action<FileManagerRequest> _onFileManagerRequest;
 
-        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest)
+        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest, Action<FileManagerRequest> onFileManagerRequest)
         {
             _onSystemInfoRequest = onSystemInfoRequest;
             _onRemoteShellRequest = onRemoteShellRequest;
+            _onFileManagerRequest = onFileManagerRequest;
         }
 
         public void HandleLine(string json)
@@ -40,6 +42,13 @@ namespace Client.Networking
                         }
                         break;
 
+                    case PacketType.FileManagerRequest:
+                        var fileReq = JsonHelper.Deserialize<FileManagerRequest>(json);
+                        if(fileReq != null)
+                        {
+                            _onFileManagerRequest(fileReq);
+                        }
+                        break;
 
                     default:
                         break;

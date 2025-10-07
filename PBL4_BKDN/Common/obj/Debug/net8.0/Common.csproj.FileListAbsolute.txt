@@ -32,3 +32,15 @@ D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.dll
 D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\refint\Common.dll
 D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.pdb
 D:\2025-2026\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\ref\Common.dll
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\bin\Debug\net8.0\Common.deps.json
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\bin\Debug\net8.0\Common.dll
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\bin\Debug\net8.0\Common.pdb
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\obj\Debug\net8.0\Common.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\obj\Debug\net8.0\Common.AssemblyInfoInputs.cache
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\obj\Debug\net8.0\Common.AssemblyInfo.cs
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\obj\Debug\net8.0\Common.csproj.CoreCompileInputs.cache
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\obj\Debug\net8.0\Common.sourcelink.json
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\obj\Debug\net8.0\Common.dll
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\obj\Debug\net8.0\refint\Common.dll
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\obj\Debug\net8.0\Common.pdb
+C:\Users\Kim Tai\source\repos\PBL4_BK\PBL4_BKDN\Common\obj\Debug\net8.0\ref\Common.dll

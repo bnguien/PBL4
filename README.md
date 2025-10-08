@@ -45,7 +45,7 @@ dotnet build
 ## List of features
 
 - **Kết nối & Quản lý**
-  - Server lắng nghe trên cổng `10000`, client tự động kết nối & duy trì kết nối.
+  - Server lắng nghe trên cổng `5000` (có thể thay đổi cổng tùy ý), client tự động kết nối & duy trì kết nối.
   - Hiển thị trạng thái kết nối (Active/Idle).
 
 - **Nhận diện Client**

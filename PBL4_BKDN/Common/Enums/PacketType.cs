@@ -20,8 +20,9 @@ namespace Common.Enums
         KeyLoggerBatch = 103, // batch text (continuous)
         KeyLoggerComboEvent = 104, // detected key combination event
         KeyLoggerLangToggle = 105,
-        
-
+        //Action packet
+        ShutdownActionResponse = 18,
+        ShutdownActionRequest = 19
     }
 }
 

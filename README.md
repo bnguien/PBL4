@@ -72,7 +72,7 @@ dotnet build
   - Gửi thông báo với caption/nội dung/nút/icon, có chế độ preview & gửi hàng loạt.
 
 - **Điều khiển Hệ thống**
-  - Shutdown/Restart/Standby, yêu cầu reconnect, ngắt kết nối.
+  - Shutdown/Restart/Standby, nâng quyền truy cập, ngắt kết nối.
 
 ## Note
 Project chỉ sử dụng cho mục đích **học tập và nghiên cứu**

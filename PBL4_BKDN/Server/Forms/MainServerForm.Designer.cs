@@ -1,4 +1,6 @@
-﻿namespace Server.Forms
+﻿using Common.Enums;
+
+namespace Server.Forms
 {
     partial class MainServerForm
     {
@@ -48,6 +50,13 @@
             keyLoggerToolStripMenuItem = new ToolStripMenuItem();
             keyLoggerStartParallelToolStripMenuItem = new ToolStripMenuItem();
             keyLoggerStartContinuousToolStripMenuItem = new ToolStripMenuItem();
+            shutdownActionToolStripMenuItem = new ToolStripMenuItem();
+            ShutdownToolStripMenuItem = new ToolStripMenuItem();
+            RestartToolStripMenuItem = new ToolStripMenuItem();
+            StandbyToolStripMenuItem = new ToolStripMenuItem();
+            userManagementToolStripMenuItem = new ToolStripMenuItem();
+            elevateToolStripMenuItem = new ToolStripMenuItem();
+            disconnectToolStripMenuItem = new ToolStripMenuItem();
             rightPanel = new Panel();
             txtLog = new TextBox();
             cboLogFilter = new ComboBox();
@@ -163,7 +172,7 @@
             // ctxClients
             // 
             ctxClients.ImageScalingSize = new Size(20, 20);
-            ctxClients.Items.AddRange(new ToolStripItem[] { systemInfoToolStripMenuItem, remoteShellToolStripMenuItem, fileManagerToolStripMenuItem, messageBoxToolStripMenuItem, keyLoggerToolStripMenuItem });
+            ctxClients.Items.AddRange(new ToolStripItem[] { systemInfoToolStripMenuItem, remoteShellToolStripMenuItem, fileManagerToolStripMenuItem, messageBoxToolStripMenuItem, shutdownActionToolStripMenuItem, userManagementToolStripMenuItem,keyLoggerToolStripMenuItem });
             ctxClients.Name = "ctxClients";
             ctxClients.Size = new Size(156, 28);
             // 
@@ -236,6 +245,51 @@
             keyLoggerStartContinuousToolStripMenuItem.Size = new Size(220, 26);
             keyLoggerStartContinuousToolStripMenuItem.Text = "Start (Continuous)";
             keyLoggerStartContinuousToolStripMenuItem.Click += keyLoggerStartContinuousToolStripMenuItem_Click;
+            //
+            //SystemActionToolStripMenuItem
+            //
+            shutdownActionToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { ShutdownToolStripMenuItem, RestartToolStripMenuItem, StandbyToolStripMenuItem });
+            shutdownActionToolStripMenuItem.Name = "shutdownActionToolStripMenuItem";
+            shutdownActionToolStripMenuItem.Size = new Size(155, 24);
+            shutdownActionToolStripMenuItem.Text = "Action";
+
+            ShutdownToolStripMenuItem.Name = "shutdownToolStripMenuItem";
+            ShutdownToolStripMenuItem.Size = new Size(220, 26);
+            ShutdownToolStripMenuItem.Text = "Shutdown";
+            ShutdownToolStripMenuItem.Click += ShutdownToolStripMenuItem_Click;
+
+            RestartToolStripMenuItem.Name = "restartToolStripMenuItem";
+            RestartToolStripMenuItem.Size = new Size(220, 26);
+            RestartToolStripMenuItem.Text = "Restart";
+            RestartToolStripMenuItem.Click += RestartToolStripMenuItem_Click;
+
+            StandbyToolStripMenuItem.Name = "stanbyToolStripMenuItem";
+            StandbyToolStripMenuItem.Size = new Size(220, 26);
+            StandbyToolStripMenuItem.Text = "Standby";
+            StandbyToolStripMenuItem.Click += StandbyToolStripMenuItem_Click;
+            // 
+            // userManagementToolStripMenuItem
+            // 
+            userManagementToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] {elevateToolStripMenuItem,disconnectToolStripMenuItem});
+            userManagementToolStripMenuItem.Name = "userManagementToolStripMenuItem";
+            userManagementToolStripMenuItem.Size = new Size(200, 24);
+            userManagementToolStripMenuItem.Text = "User Management";
+
+            // 
+            // elevateToolStripMenuItem
+            // 
+            elevateToolStripMenuItem.Name = "elevateToolStripMenuItem";
+            elevateToolStripMenuItem.Size = new Size(200, 26);
+            elevateToolStripMenuItem.Text = "Elevate (Run as Admin)";
+            elevateToolStripMenuItem.Click += ElevateToolStripMenuItem_Click;
+
+            // 
+            // disconnectToolStripMenuItem
+            // 
+            disconnectToolStripMenuItem.Name = "disconnectToolStripMenuItem";
+            disconnectToolStripMenuItem.Size = new Size(200, 26);
+            disconnectToolStripMenuItem.Text = "Disconnect";
+            disconnectToolStripMenuItem.Click += DisconnectToolStripMenuItem_Click;
             // 
             // rightPanel
             // 
@@ -319,6 +373,13 @@
         private System.Windows.Forms.ToolStripMenuItem remoteShellToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileManagerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem messageBoxToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem shutdownActionToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ShutdownToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem RestartToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem StandbyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem userManagementToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem elevateToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem disconnectToolStripMenuItem;
         private System.Windows.Forms.Panel rightPanel;
         private System.Windows.Forms.ComboBox cboLogFilter;
         private System.Windows.Forms.Label lblLogFilter;

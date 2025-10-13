@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
@@ -64,7 +64,6 @@ namespace Client.Networking
                 OnDisconnected?.Invoke();
             }
         }
-
         public void Dispose()
         {
             try { _cts?.Cancel(); } catch { }
@@ -75,5 +74,4 @@ namespace Client.Networking
         }
     }
 }
-
 

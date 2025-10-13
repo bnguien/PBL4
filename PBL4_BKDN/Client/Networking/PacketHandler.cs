@@ -10,13 +10,15 @@ namespace Client.Networking
         private readonly Action<SystemInfoRequest> _onSystemInfoRequest;
         private readonly Action<RemoteShellRequest> _onRemoteShellRequest;
         private readonly Action<FileManagerRequest> _onFileManagerRequest;
+        private readonly Action<TaskManagerRequest> _onTaskManagerRequest;
 
-        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest, Action<FileManagerRequest> onFileManagerRequest)
+        public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, Action<RemoteShellRequest> onRemoteShellRequest, Action<FileManagerRequest> onFileManagerRequest, Action<TaskManagerRequest> onTaskManagerRequest)
         {
             _onSystemInfoRequest = onSystemInfoRequest;
             _onRemoteShellRequest = onRemoteShellRequest;
             _onFileManagerRequest = onFileManagerRequest;
-        }
+			_onTaskManagerRequest = onTaskManagerRequest;
+		}
 
         public void HandleLine(string json)
         {
@@ -50,7 +52,15 @@ namespace Client.Networking
                         }
                         break;
 
-                    default:
+					case PacketType.TaskManagerRequest:
+						var taskReq = JsonHelper.Deserialize<TaskManagerRequest>(json);
+						if (taskReq != null)
+						{
+							_onTaskManagerRequest(taskReq);
+						}
+						break;
+
+					default:
                         break;
                 }
             }

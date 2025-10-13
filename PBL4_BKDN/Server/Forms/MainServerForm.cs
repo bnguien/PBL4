@@ -25,13 +25,14 @@ namespace Server.Forms
         private readonly SystemInfoHandler _systemInfoHandler = new SystemInfoHandler();
         private readonly RemoteShellHandler _remoteShellHandler = new RemoteShellHandler();
         private readonly FileManagerHandler _fileManagerHandler = new FileManagerHandler();
-        private readonly CommandService _commandService = new CommandService();
+        private readonly TaskManagerHandler _taskManagerHandler = new TaskManagerHandler();
+		private readonly CommandService _commandService = new CommandService();
         private readonly BindingSource _clientsBinding = new BindingSource();
 
         public MainServerForm()
         {
             InitializeComponent();
-            _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse, OnFileManagerResponse);
+            _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse, OnFileManagerResponse, OnTaskManagerResponse);
             InitializeClientsGrid();
         }
 
@@ -84,7 +85,21 @@ namespace Server.Forms
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] FileManagerResponse from {response.ClientId}");
         }
 
-        private void StartServer(int port)
+        private void OnTaskManagerResponse (TaskManagerResponse response)
+		{
+			if (!string.IsNullOrEmpty(response.ClientId))
+			{
+				_taskManagerHandler.SaveLastResponse(response.ClientId, response);
+				// Nếu có OperationResult từ client, raise event để UI nhận trạng thái hành động
+				if (response.Payload?.OperationResult != null)
+				{
+					_taskManagerHandler.NotifyOperationCompleted(response.Payload.OperationResult);
+				}
+			}
+			AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] TaskManagerResponse from {response.ClientId}");
+		}
+
+		private void StartServer(int port)
         {
             _listener = new ServerListener(IPAddress.Any, port);
             _listener.OnClientConnected += conn =>
@@ -191,7 +206,17 @@ namespace Server.Forms
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened File Manager for {conn.Id}");
         }
 
-        private void OpenIfCached(string clientId, bool hardware = false, bool software = false, bool network = false)
+		private void taskManagerToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			var conn = GetSelectedConnection();
+			if (conn == null) return;
+
+			var taskManagerForm = TaskManagerForm.CreateNewOrGetExisting(conn, _taskManagerHandler);
+			taskManagerForm.Show();
+			AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened Task Manager for {conn.Id}");
+		}
+
+		private void OpenIfCached(string clientId, bool hardware = false, bool software = false, bool network = false)
         {
             if (_systemInfoHandler.TryGetLastResponse(clientId, out var resp) && resp?.Payload != null)
             {

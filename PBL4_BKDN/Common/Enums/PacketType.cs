@@ -7,12 +7,16 @@ namespace Common.Enums
         Pong = 2,
         SystemInfoRequest = 10,
         SystemInfoResponse = 11,
+
         RemoteShellRequest = 12,
         RemoteShellResponse = 13,
-        FileManagerRequest = 14,
-        FileManagerResponse = 15
 
-    }
+        FileManagerRequest = 14,
+        FileManagerResponse = 15,
+
+		TaskManagerRequest = 20,
+        TaskManagerResponse = 21,
+	}
 }
 
 

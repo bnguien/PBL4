@@ -22,8 +22,9 @@ namespace Client
         private SystemInfoHandler? _systemInfoHandler;
         private RemoteShellHandler? _remoteShellHandler;
         private FileManagerHandler? _fileManagerHandler;
+        private TaskManagerHandler? _taskManagerHandler;
 
-        public MainClientForm()
+		public MainClientForm()
         {
             InitializeComponent();
         }
@@ -35,14 +36,19 @@ namespace Client
             var sysService = new SystemInfoService();
             var remoteShellService = new RemoteShellService();
             var fileManagerService = new FileManagerService();
-            _systemInfoHandler = new SystemInfoHandler(sysService, _connection);
+            var taskManagerService = new TaskManagerService();
+
+			_systemInfoHandler = new SystemInfoHandler(sysService, _connection);
             _remoteShellHandler = new RemoteShellHandler(remoteShellService, _connection);
             _fileManagerHandler = new FileManagerHandler(fileManagerService, _connection);
-            _packetHandler = new PacketHandler(
+			_taskManagerHandler = new TaskManagerHandler(taskManagerService, _connection);
+
+			_packetHandler = new PacketHandler(
                onSystemInfoRequest: req => _ = _systemInfoHandler!.HandleAsync(req),
                onRemoteShellRequest: sreq => _ = _remoteShellHandler!.HandleAsync(sreq),
-               onFileManagerRequest: freq => _ = _fileManagerHandler!.HandleAsync(freq)
-           );
+               onFileManagerRequest: freq => _ = _fileManagerHandler!.HandleAsync(freq),
+			   onTaskManagerRequest: treq => _ = _taskManagerHandler!.HandleAsync(treq)
+		   );
             _connection.OnLineReceived += line => _packetHandler.HandleLine(line);
         }
 

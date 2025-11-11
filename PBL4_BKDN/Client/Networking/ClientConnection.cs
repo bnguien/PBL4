@@ -21,6 +21,8 @@ namespace Client.Networking
         public event Action? OnDisconnected;
 
         public bool IsConnected => _tcpClient?.Connected == true;
+        public string? RemoteHost { get; private set; }
+        public int RemotePort { get; private set; }
 
         public async Task ConnectAsync(string host, int port, CancellationToken cancellationToken = default)
         {
@@ -30,6 +32,8 @@ namespace Client.Networking
             _reader = new StreamReader(_stream, Encoding.UTF8, false, 8192, true);
             _writer = new StreamWriter(_stream, new UTF8Encoding(false)) { AutoFlush = true, NewLine = "\n" };
             _cts = new CancellationTokenSource();
+            RemoteHost = host;
+            RemotePort = port;
             _ = ReadLoopAsync(_cts.Token);
         }
 

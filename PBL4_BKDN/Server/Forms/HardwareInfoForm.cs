@@ -12,7 +12,7 @@ namespace Server.Forms
 {
     public partial class HardwareInfoForm : Form
     {
-        private readonly Common.Models.HardwareInfoModel _hardware;
+        private readonly Common.Models.HardwareInfoModel? _hardware;
         public HardwareInfoForm()
         {
             InitializeComponent();

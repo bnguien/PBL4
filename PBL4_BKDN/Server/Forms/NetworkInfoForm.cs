@@ -12,7 +12,7 @@ namespace Server.Forms
 {
     public partial class NetworkInfoForm: Form
     {
-        private readonly Common.Models.NetworkInfoModel _network;
+        private readonly Common.Models.NetworkInfoModel? _network;
         public NetworkInfoForm()
         {
             InitializeComponent();
@@ -26,9 +26,9 @@ namespace Server.Forms
 
         private void LoadData()
         {
-            lblPrimary.Text = $"Primary IPv4: {_network.PrimaryIPv4}\r\nPrimary MAC: {_network.PrimaryMac}";
+            lblPrimary.Text = $"Primary IPv4: {_network?.PrimaryIPv4 ?? "N/A"}\r\nPrimary MAC: {_network?.PrimaryMac ?? "N/A"}";
             var adapterRows = new System.Collections.Generic.List<dynamic>();
-            foreach (var a in _network.Adapters)
+            foreach (var a in _network?.Adapters ?? new List<Common.Models.NetworkAdapterModel>())
             {
                 adapterRows.Add(new
                 {

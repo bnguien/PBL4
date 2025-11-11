@@ -12,7 +12,7 @@ namespace Server.Forms
 {
     public partial class SoftwareInfoForm: Form
     {
-        private readonly Common.Models.SoftwareInfoModel _software;
+        private readonly Common.Models.SoftwareInfoModel? _software;
         public SoftwareInfoForm()
         {
             InitializeComponent();

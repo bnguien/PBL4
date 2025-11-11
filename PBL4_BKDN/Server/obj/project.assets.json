@@ -33,11 +33,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Kim Tai\\source\\repos\\PBL4_BK\\PBL4_BKDN\\Server\\Server.csproj",
+      "projectUniqueName": "D:\\PBL\\PBL4\\PBL4_BKDN\\Server\\Server.csproj",
       "projectName": "Server",
-      "projectPath": "C:\\Users\\Kim Tai\\source\\repos\\PBL4_BK\\PBL4_BKDN\\Server\\Server.csproj",
+      "projectPath": "D:\\PBL\\PBL4\\PBL4_BKDN\\Server\\Server.csproj",
       "packagesPath": "C:\\Users\\Kim Tai\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Kim Tai\\source\\repos\\PBL4_BK\\PBL4_BKDN\\Server\\obj\\",
+      "outputPath": "D:\\PBL\\PBL4\\PBL4_BKDN\\Server\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -58,8 +58,8 @@
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "projectReferences": {
-            "C:\\Users\\Kim Tai\\source\\repos\\PBL4_BK\\PBL4_BKDN\\Common\\Common.csproj": {
-              "projectPath": "C:\\Users\\Kim Tai\\source\\repos\\PBL4_BK\\PBL4_BKDN\\Common\\Common.csproj"
+            "D:\\PBL\\PBL4\\PBL4_BKDN\\Common\\Common.csproj": {
+              "projectPath": "D:\\PBL\\PBL4\\PBL4_BKDN\\Common\\Common.csproj"
             }
           }
         }

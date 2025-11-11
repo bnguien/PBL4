@@ -52,6 +52,35 @@ namespace Server.Services
             var json = JsonHelper.Serialize(request);
             await connection.SendAsync(json);
         }
+
+        // Screen Control methods
+        public async Task SendScreenControlStartAsync(ServerClientConnection connection, ScreenControlStart request)
+        {
+            request.ClientId = connection.Id;
+            var json = JsonHelper.Serialize(request);
+            await connection.SendAsync(json);
+        }
+
+        public async Task SendScreenControlStopAsync(ServerClientConnection connection, ScreenControlStop request)
+        {
+            request.ClientId = connection.Id;
+            var json = JsonHelper.Serialize(request);
+            await connection.SendAsync(json);
+        }
+
+        public async Task SendMouseEventAsync(ServerClientConnection connection, ScreenControlMouseEvent request)
+        {
+            request.ClientId = connection.Id;
+            var json = JsonHelper.Serialize(request);
+            await connection.SendAsync(json);
+        }
+
+        public async Task SendKeyboardEventAsync(ServerClientConnection connection, ScreenControlKeyboardEvent request)
+        {
+            request.ClientId = connection.Id;
+            var json = JsonHelper.Serialize(request);
+            await connection.SendAsync(json);
+        }
     }
 }
 

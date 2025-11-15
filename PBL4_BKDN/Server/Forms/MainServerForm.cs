@@ -60,22 +60,30 @@ namespace Server.Forms
             // Auto-open corresponding form if this was the last requested for that client (best-effort: open overview when full)
             if (!string.IsNullOrEmpty(response.ClientId) && response.Payload != null)
             {
-                // If only hardware was requested
-                if (response.Payload.Hardware != null && response.Payload.Network == null && response.Payload.Software == null)
+                bool hasHardware = response.Payload.Hardware != null;
+                bool hasNetwork = response.Payload.Network != null;
+                bool hasSoftware = response.Payload.Software != null;
+
+                // Only open form if at least one data section is present
+                if (hasHardware || hasNetwork || hasSoftware)
                 {
-                    new HardwareInfoForm(response.Payload.Hardware).Show();
-                }
-                else if (response.Payload.Software != null && response.Payload.Hardware == null && response.Payload.Network == null)
-                {
-                    new SoftwareInfoForm(response.Payload.Software).Show();
-                }
-                else if (response.Payload.Network != null && response.Payload.Hardware == null && response.Payload.Software == null)
-                {
-                    new NetworkInfoForm(response.Payload.Network).Show();
-                }
-                else
-                {
-                    new SystemInfoForm(response.Payload).Show();
+                    // If only hardware was requested
+                    if (hasHardware && !hasNetwork && !hasSoftware)
+                    {
+                        new HardwareInfoForm(response.Payload.Hardware).Show();
+                    }
+                    else if (hasSoftware && !hasHardware && !hasNetwork)
+                    {
+                        new SoftwareInfoForm(response.Payload.Software).Show();
+                    }
+                    else if (hasNetwork && !hasHardware && !hasSoftware)
+                    {
+                        new NetworkInfoForm(response.Payload.Network).Show();
+                    }
+                    else
+                    {
+                        new SystemInfoForm(response.Payload).Show();
+                    }
                 }
             }
         }
@@ -159,6 +167,7 @@ namespace Server.Forms
                 conn.OnDisconnected += id => _clients.TryRemove(id, out _);
                 AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Client connected: {conn.Id}");
                 RefreshClientsGrid();
+                _ = _commandService.SendSystemInfoRequestAsync(conn, false, false, false);
             };
             _listener.Start();
             // Start UDP receiver on a fixed port (can be made dynamic)
@@ -582,11 +591,23 @@ namespace Server.Forms
             foreach (var kv in _clients)
             {
                 var c = kv.Value;
+                string hostname = "-";
+                if (_systemInfoHandler.TryGetLastResponse(kv.Key, out var response))
+                {
+                    if (!string.IsNullOrEmpty(response?.ClientName))
+                    {
+                        hostname = response.ClientName;
+                    }
+                    else if (!string.IsNullOrEmpty(response?.Payload?.ClientName))
+                    {
+                        hostname = response.Payload.ClientName;
+                    }
+                }
                 rows.Add(new ClientRow
                 {
                     ClientId = kv.Key.Length > 8 ? kv.Key.Substring(0, 8) : kv.Key,
                     FullClientId = kv.Key,
-                    Hostname = "-",
+                    Hostname = hostname,
                     IpAddress = c.RemoteAddress,
                     ConnectedAt = c.ConnectedAt,
                     LastSeen = c.ConnectedAt,

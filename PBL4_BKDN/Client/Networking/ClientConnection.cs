@@ -15,6 +15,8 @@ namespace Client.Networking
         private StreamReader? _reader;
         private StreamWriter? _writer;
         private CancellationTokenSource? _cts;
+        private const string ServerHost = "192.168.10.20";
+        private const int ServerPort = 5000;
 
         public event Action<string>? OnLineReceived;
         public event Action<Exception>? OnReadError;
@@ -24,16 +26,19 @@ namespace Client.Networking
         public string? RemoteHost { get; private set; }
         public int RemotePort { get; private set; }
 
-        public async Task ConnectAsync(string host, int port, CancellationToken cancellationToken = default)
+        public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             _tcpClient = new TcpClient();
-            await _tcpClient.ConnectAsync(host, port, cancellationToken);
+            await _tcpClient.ConnectAsync(ServerHost, ServerPort, cancellationToken);
+
             _stream = _tcpClient.GetStream();
             _reader = new StreamReader(_stream, Encoding.UTF8, false, 8192, true);
             _writer = new StreamWriter(_stream, new UTF8Encoding(false)) { AutoFlush = true, NewLine = "\n" };
             _cts = new CancellationTokenSource();
-            RemoteHost = host;
-            RemotePort = port;
+
+            RemoteHost = ServerHost;
+            RemotePort = ServerPort;
+
             _ = ReadLoopAsync(_cts.Token);
         }
 

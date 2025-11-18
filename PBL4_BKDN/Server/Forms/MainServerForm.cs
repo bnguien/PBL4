@@ -22,6 +22,7 @@ namespace Server.Forms
     {
         private ServerListener? _listener;
         private readonly ConcurrentDictionary<string, ServerClientConnection> _clients = new ConcurrentDictionary<string, ServerClientConnection>();
+        private readonly Dictionary<string, ClientMetadata> _knownClients = new Dictionary<string, ClientMetadata>();
         private readonly PacketHandler _packetHandler;
         private readonly SystemInfoHandler _systemInfoHandler = new SystemInfoHandler();
         private readonly RemoteShellHandler _remoteShellHandler = new RemoteShellHandler();
@@ -51,42 +52,80 @@ namespace Server.Forms
 
         private void OnSystemInfoResponse(SystemInfoResponse response)
         {
-            if (!string.IsNullOrEmpty(response.ClientId))
+            if (string.IsNullOrEmpty(response.ClientId)) return;
+            _systemInfoHandler.SaveLastResponse(response.ClientId, response);
+            string newHostname = response.ClientName;
+            if (string.IsNullOrEmpty(newHostname) && response.Payload != null)
+                newHostname = response.Payload.ClientName;
+            string currentIp = "";
+            if (_clients.TryGetValue(response.ClientId, out var conn)) currentIp = conn.RemoteAddress;
+
+            if (!string.IsNullOrEmpty(newHostname))
             {
-                _systemInfoHandler.SaveLastResponse(response.ClientId, response);
+                lock (_knownClients)
+                {
+                    if (_knownClients.TryGetValue(response.ClientId, out var currentMeta))
+                    {
+                        currentMeta.Hostname = newHostname;
+                        currentMeta.IpAddress = currentIp;
+                    }
+                    else
+                    {
+                        currentMeta = new ClientMetadata
+                        {
+                            FullId = response.ClientId,
+                            Hostname = newHostname,
+                            IpAddress = currentIp,
+                            FirstConnected = DateTime.Now,
+                            LastSeen = DateTime.Now
+                        };
+                        _knownClients[response.ClientId] = currentMeta;
+                    }
+                    var duplicates = _knownClients.Keys
+                        .Where(key => key != response.ClientId)
+                        .Where(key => _knownClients[key].Hostname == newHostname && _knownClients[key].IpAddress == currentIp)
+                        .ToList();
+
+                    foreach (var oldId in duplicates)
+                    {
+                        currentMeta.FirstConnected = _knownClients[oldId].FirstConnected;
+                        _knownClients.Remove(oldId);
+                    }
+                }
             }
             AppendLog($"[{DateTime.Now:HH:mm:ss}] [RECV] SystemInfoResponse");
             RefreshClientsGrid();
-            // Auto-open corresponding form if this was the last requested for that client (best-effort: open overview when full)
             if (!string.IsNullOrEmpty(response.ClientId) && response.Payload != null)
             {
                 bool hasHardware = response.Payload.Hardware != null;
                 bool hasNetwork = response.Payload.Network != null;
                 bool hasSoftware = response.Payload.Software != null;
 
-                // Only open form if at least one data section is present
                 if (hasHardware || hasNetwork || hasSoftware)
                 {
-                    // If only hardware was requested
-                    if (hasHardware && !hasNetwork && !hasSoftware)
+                    this.Invoke((MethodInvoker)delegate
                     {
-                        new HardwareInfoForm(response.Payload.Hardware).Show();
-                    }
-                    else if (hasSoftware && !hasHardware && !hasNetwork)
-                    {
-                        new SoftwareInfoForm(response.Payload.Software).Show();
-                    }
-                    else if (hasNetwork && !hasHardware && !hasSoftware)
-                    {
-                        new NetworkInfoForm(response.Payload.Network).Show();
-                    }
-                    else
-                    {
-                        new SystemInfoForm(response.Payload).Show();
-                    }
+                        if (hasHardware && !hasNetwork && !hasSoftware)
+                        {
+                            new HardwareInfoForm(response.Payload.Hardware).Show();
+                        }
+                        else if (hasSoftware && !hasHardware && !hasNetwork)
+                        {
+                            new SoftwareInfoForm(response.Payload.Software).Show();
+                        }
+                        else if (hasNetwork && !hasHardware && !hasSoftware)
+                        {
+                            new NetworkInfoForm(response.Payload.Network).Show();
+                        }
+                        else
+                        {
+                            new SystemInfoForm(response.Payload).Show();
+                        }
+                    });
                 }
             }
         }
+
 
         private void OnRemoteShellResponse(RemoteShellResponse response)
         {
@@ -163,8 +202,38 @@ namespace Server.Forms
             _listener.OnClientConnected += conn =>
             {
                 _clients[conn.Id] = conn;
+                lock (_knownClients) 
+                {
+                    if (!_knownClients.ContainsKey(conn.Id))
+                    {
+                        _knownClients[conn.Id] = new ClientMetadata
+                        {
+                            FullId = conn.Id,
+                            IpAddress = conn.RemoteAddress,
+                            FirstConnected = DateTime.Now,
+                            Hostname = "-" 
+                        };
+                    }
+                    _knownClients[conn.Id].LastSeen = DateTime.Now;
+                    _knownClients[conn.Id].IpAddress = conn.RemoteAddress; 
+                }
+
                 conn.OnLineReceived += (id, line) => _packetHandler.HandleLine(line);
-                conn.OnDisconnected += id => _clients.TryRemove(id, out _);
+                conn.OnDisconnected += id =>
+                {
+                    _clients.TryRemove(id, out _);
+                    lock (_knownClients)
+                    {
+                        if (_knownClients.TryGetValue(id, out var meta))
+                        {
+                            meta.LastSeen = DateTime.Now;
+                        }
+                    }
+
+                    AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Client disconnected: {id}");
+                    RefreshClientsGrid();
+                };
+
                 AppendLog($"[{DateTime.Now:HH:mm:ss}] [INFO] Client connected: {conn.Id}");
                 RefreshClientsGrid();
                 _ = _commandService.SendSystemInfoRequestAsync(conn, false, false, false);
@@ -586,35 +655,47 @@ namespace Server.Forms
                 dgvClients.BeginInvoke(new Action(RefreshClientsGrid));
                 return;
             }
-
+            var activeIds = _clients.Keys.ToHashSet();
             var rows = new List<ClientRow>();
-            foreach (var kv in _clients)
+
+            lock (_knownClients)
             {
-                var c = kv.Value;
-                string hostname = "-";
-                if (_systemInfoHandler.TryGetLastResponse(kv.Key, out var response))
+                foreach (var kv in _knownClients)
                 {
-                    if (!string.IsNullOrEmpty(response?.ClientName))
+                    var meta = kv.Value;
+                    bool isOnline = activeIds.Contains(meta.FullId);
+                    if (_systemInfoHandler.TryGetLastResponse(kv.Key, out var response))
                     {
-                        hostname = response.ClientName;
+                        if (!string.IsNullOrEmpty(response?.ClientName))
+                        {
+                            meta.Hostname = response.ClientName;
+                        }
+                        else if (!string.IsNullOrEmpty(response?.Payload?.ClientName))
+                        {
+                            meta.Hostname = response.Payload.ClientName;
+                        }
                     }
-                    else if (!string.IsNullOrEmpty(response?.Payload?.ClientName))
+                    rows.Add(new ClientRow
                     {
-                        hostname = response.Payload.ClientName;
-                    }
+                        FullClientId = meta.FullId,
+                        ClientId = meta.FullId.Length > 8 ? meta.FullId.Substring(0, 8) : meta.FullId,
+                        Hostname = meta.Hostname,
+                        IpAddress = meta.IpAddress,
+                        ConnectedAt = meta.FirstConnected,
+                        LastSeen = isOnline ? DateTime.Now : meta.LastSeen, 
+                        Status = isOnline ? "Online" : "Offline"
+                    });
                 }
-                rows.Add(new ClientRow
-                {
-                    ClientId = kv.Key.Length > 8 ? kv.Key.Substring(0, 8) : kv.Key,
-                    FullClientId = kv.Key,
-                    Hostname = hostname,
-                    IpAddress = c.RemoteAddress,
-                    ConnectedAt = c.ConnectedAt,
-                    LastSeen = c.ConnectedAt,
-                    Status = "Online"
-                });
             }
-            _clientsBinding.DataSource = rows;
+            _clientsBinding.DataSource = rows.OrderByDescending(r => r.Status == "Online").ThenByDescending(r => r.LastSeen).ToList();
         }
+    }
+    public class ClientMetadata
+    {
+        public string FullId { get; set; } = string.Empty;
+        public string Hostname { get; set; } = "-";
+        public string IpAddress { get; set; } = string.Empty;
+        public DateTime FirstConnected { get; set; }
+        public DateTime LastSeen { get; set; }
     }
 }

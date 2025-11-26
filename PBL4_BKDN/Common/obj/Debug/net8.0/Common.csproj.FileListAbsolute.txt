@@ -56,3 +56,15 @@ D:\PBL\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.dll
 D:\PBL\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\refint\Common.dll
 D:\PBL\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.pdb
 D:\PBL\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\ref\Common.dll
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\bin\Debug\net8.0\Common.deps.json
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\bin\Debug\net8.0\Common.dll
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\bin\Debug\net8.0\Common.pdb
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.GeneratedMSBuildEditorConfig.editorconfig
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.AssemblyInfoInputs.cache
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.AssemblyInfo.cs
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.csproj.CoreCompileInputs.cache
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.sourcelink.json
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.dll
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\refint\Common.dll
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\Common.pdb
+D:\PBL4_BK\PBL4\PBL4_BKDN\Common\obj\Debug\net8.0\ref\Common.dll

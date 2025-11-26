@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "cz1G4DLkyZg=",
+  "dgSpecHash": "xR1CUutV1QE=",
   "success": true,
-  "projectFilePath": "D:\\PBL\\PBL4\\PBL4_BKDN\\Client\\Client.csproj",
+  "projectFilePath": "D:\\PBL4_BK\\PBL4\\PBL4_BKDN\\Client\\Client.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Kim Tai\\.nuget\\packages\\system.codedom\\7.0.0\\system.codedom.7.0.0.nupkg.sha512",
     "C:\\Users\\Kim Tai\\.nuget\\packages\\system.management\\7.0.2\\system.management.7.0.2.nupkg.sha512"

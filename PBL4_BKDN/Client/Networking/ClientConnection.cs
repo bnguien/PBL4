@@ -15,7 +15,7 @@ namespace Client.Networking
         private StreamReader? _reader;
         private StreamWriter? _writer;
         private CancellationTokenSource? _cts;
-        private const string ServerHost = "192.168.10.20";
+        private const string ServerHost = "127.0.0.1";
         private const int ServerPort = 5000;
 
         public event Action<string>? OnLineReceived;

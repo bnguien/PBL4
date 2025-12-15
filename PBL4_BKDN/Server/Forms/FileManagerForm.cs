@@ -34,6 +34,20 @@ namespace Server.Forms
         private string _currentPath = string.Empty;
         private string _currentClientId = string.Empty;
         private bool _isConnected = true;
+        
+        private Dictionary<string, UploadState> _activeUploads = new();
+        private readonly Dictionary<string, TaskCompletionSource<bool>> _chunkWaiters = new();
+        private readonly HashSet<string> _canceledUploads = new();
+        private class UploadState
+        {
+            public string TransferId { get; set; }
+            public string FilePath { get; set; }
+            public long FileSize { get; set; }
+            public string FileHash { get; set; }
+            public int TotalChunks { get; set; }
+            public int SentChunks { get; set; }
+        }
+        private const int ChunkSize = 1_048_576; // 1MB
 
         // UI Controls
         private TreeView? _treeView;
@@ -47,8 +61,11 @@ namespace Server.Forms
         private Button? _renameButton;
         private Button? _downloadButton;
         private Button? _createFolderButton;
-        private StatusStrip? _statusStrip;
+		private Button _uploadFileButton;
+        private Button _cancelUploadFileButton;
+		private StatusStrip? _statusStrip;
         private ToolStripStatusLabel? _statusLabel;
+        private ToolStripProgressBar? _uploadProgressBar;
 
         public FileManagerForm(ServerClientConnection connection, FileManagerHandler fileManagerHandler)
         {
@@ -79,7 +96,7 @@ namespace Server.Forms
             _treeView = new TreeView
             {
                 Dock = DockStyle.Left,
-                Width = 200,
+                Width = 150,
                 ImageList = CreateImageList()
             };
 
@@ -177,7 +194,7 @@ namespace Server.Forms
             _downloadButton = new Button
             {
                 Dock = DockStyle.Left,
-                Width = 80,
+                Width = 100,
                 Text = "Download",
                 UseVisualStyleBackColor = true,
                 Enabled = false
@@ -191,6 +208,34 @@ namespace Server.Forms
                 UseVisualStyleBackColor = true
             };
 
+            _uploadFileButton = new Button
+            {
+                Dock = DockStyle.Left,
+                Width = 120,
+                Text = "Upload File",
+                UseVisualStyleBackColor = true
+            };
+
+            _cancelUploadFileButton = new Button
+            {
+                Dock = DockStyle.Left,
+                Width = 120,
+                Text = "Cancel Upload",
+                UseVisualStyleBackColor = true,
+                Enabled = false
+            };
+
+            _cancelUploadFileButton = new Button
+            {
+                Dock = DockStyle.Left,
+                Width = 120,
+                Text = "Cancel Upload",
+                UseVisualStyleBackColor = false
+            };
+
+            toolbar.Controls.Add(_cancelUploadFileButton);
+            toolbar.Controls.Add(_cancelUploadFileButton);
+            toolbar.Controls.Add(_uploadFileButton);
             toolbar.Controls.Add(_createFolderButton);
             toolbar.Controls.Add(_downloadButton);
             toolbar.Controls.Add(_renameButton);
@@ -201,7 +246,17 @@ namespace Server.Forms
             // Status strip
             _statusStrip = new StatusStrip();
             _statusLabel = new ToolStripStatusLabel("Ready");
+            _uploadProgressBar = new ToolStripProgressBar
+            {
+                Visible = false,
+                Minimum = 0,
+                Maximum = 100,
+                Value = 0,
+                Width = 200
+            };
             _statusStrip.Items.Add(_statusLabel);
+            _statusStrip.Items.Add(new ToolStripStatusLabel { Spring = true }); // spacer
+            _statusStrip.Items.Add(_uploadProgressBar);
 
             // Add controls to form
             this.Controls.Add(_listView);
@@ -239,6 +294,8 @@ namespace Server.Forms
             _renameButton!.Click += RenameButton_Click;
             _downloadButton!.Click += DownloadButton_Click;
             _createFolderButton!.Click += CreateFolderButton_Click;
+            _uploadFileButton!.Click += UploadFileButton_Click;
+            _cancelUploadFileButton!.Click += CancelUploadFileButton_Click;
 
             _listView!.SelectedIndexChanged += ListView_SelectedIndexChanged;
             _listView!.DoubleClick += ListView_DoubleClick;
@@ -364,6 +421,60 @@ namespace Server.Forms
                 case FileManagerOperationType.CreateDirectory:
                     _statusLabel!.Text = "Directory created successfully";
                     RefreshCurrentDirectory();
+                    break;
+                case FileManagerOperationType.UploadStart:
+                    if (response.Payload?.OperationResult?.Success == true)
+                    {
+                        string transferId = response.Payload.OperationResult.TransferId ?? "";
+                        if (!string.IsNullOrEmpty(transferId))
+                        {
+                            _ = SendUploadChunksAsync(transferId);
+                        }
+                    }
+                    else
+                    {
+                        var errorMsg = response.Payload?.OperationResult?.ErrorMessage ?? "Upload start failed";
+                        MessageBox.Show(errorMsg, "Upload Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        _uploadProgressBar!.Visible = false;
+                        _uploadProgressBar.Value = 0;
+                        _cancelUploadFileButton!.Enabled = false;
+                    }
+                    break;
+                case FileManagerOperationType.UploadChunk:
+                    {
+                        string transferId = response.Payload.OperationResult.TransferId ?? "";
+                        if (!string.IsNullOrEmpty(transferId) && _chunkWaiters.TryGetValue(transferId, out var waiter))
+                        {
+                            waiter.TrySetResult(true);
+                        }
+                    }
+                    break;
+                case FileManagerOperationType.UploadComplete:
+                    if (response.Payload?.OperationResult?.Success == true)
+                    {
+                        string transferId = response.Payload.OperationResult.TransferId ?? "";
+                        CleanupUpload(transferId);
+                        
+                        _statusLabel!.Text = "Upload completed successfully";
+                        _uploadProgressBar!.Visible = false;
+                        _uploadProgressBar.Value = 0;
+                        _cancelUploadFileButton!.Enabled = false;
+                        MessageBox.Show("File uploaded successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        
+                        // Refresh directory để hiển thị file mới
+                        RefreshCurrentDirectory();
+                    }
+                    else
+                    {
+                        string errorMsg = response.Payload?.OperationResult?.ErrorMessage ?? "Unknown error";
+                        _statusLabel!.Text = $"Upload failed: {errorMsg}";
+                        MessageBox.Show($"Upload failed: {errorMsg}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        string transferId = response.Payload?.OperationResult?.TransferId ?? "";
+                        CleanupUpload(transferId);
+                        _uploadProgressBar!.Visible = false;
+                        _uploadProgressBar.Value = 0;
+                        _cancelUploadFileButton!.Enabled = false;
+                    }
                     break;
             }
         }
@@ -706,6 +817,253 @@ namespace Server.Forms
             prompt.CancelButton = cancel;
 
             return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : "";
+        }
+
+        private void UploadFileButton_Click(object? sender, EventArgs e) 
+        {
+            if (!_isConnected) 
+            {
+                MessageBox.Show("Not connected to the server", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_currentPath)) 
+            {
+                MessageBox.Show("Please select a directory", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            using var openFileDialog = new OpenFileDialog
+            {
+                Title = "Select File to Upload",
+                Filter = "All Files (*.*)|*.*",
+                Multiselect = false,
+            };
+
+            if (openFileDialog.ShowDialog() != DialogResult.OK)
+            {
+                return;
+            }
+
+            string filePath = openFileDialog.FileName;
+            string fileName = Path.GetFileName(filePath);
+            long fileSize = new FileInfo(filePath).Length;
+
+            const long maxFileSize = 200 * 1024 * 1024;
+            if (fileSize > maxFileSize) 
+            {
+                MessageBox.Show($"File too large. Maximum size: {FormatFileSize(maxFileSize)}", 
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string fileHash;
+            try 
+            {
+                using (var stream = File.OpenRead(filePath))
+                {
+                    fileHash = HashHelper.ComputeSHA256(stream);
+                }
+            } 
+            catch(Exception ex)
+            {
+                MessageBox.Show($"Failed to read file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            string transferId = Guid.NewGuid().ToString();
+            int totalChunks = (int) Math.Ceiling(fileSize / (double) ChunkSize);
+            string targetPath = Path.Combine(_currentPath, fileName);
+
+            _activeUploads[transferId] = new UploadState
+            {
+                TransferId = transferId,
+                FilePath = filePath,
+                FileSize = fileSize,
+                FileHash = fileHash,
+                TotalChunks = totalChunks,
+                SentChunks = 0
+            };
+
+            var startRequest = new FileManagerRequest
+            {
+                OperationType = FileManagerOperationType.UploadStart,
+                TransferId = transferId,
+                TargetPath = targetPath,
+				ClientId = _connection.Id
+            };
+
+            _statusLabel!.Text = $"Starting upload: {fileName} ({FormatFileSize(fileSize)})...";
+            _uploadProgressBar!.Visible = true;
+            _uploadProgressBar.Value = 0;
+            _cancelUploadFileButton!.Enabled = true;
+            SendRequest(startRequest);
+        }
+
+        private void CancelUploadFileButton_Click(object? sender, EventArgs e)
+        {
+            // Nếu có nhiều upload song song, ở đây chọn upload đầu tiên đang hoạt động.
+            // Có thể thay bằng UI chọn cụ thể nếu cần.
+            var transferId = _activeUploads.Keys.FirstOrDefault();
+            if (string.IsNullOrEmpty(transferId)) return;
+
+            _canceledUploads.Add(transferId);
+            if (_chunkWaiters.TryGetValue(transferId, out var waiter))
+            {
+                waiter.TrySetCanceled();
+            }
+            CleanupUpload(transferId);
+            _uploadProgressBar!.Visible = false;
+            _uploadProgressBar.Value = 0;
+            _cancelUploadFileButton!.Enabled = false;
+            _statusLabel!.Text = "Upload canceled";
+        }
+
+        private async Task SendUploadChunksAsync(string transferId)
+        {
+            if (!_activeUploads.TryGetValue(transferId, out var uploadState))
+            {
+                MessageBox.Show("Upload state not found", "Error", MessageBoxButtons.OKCancel);
+                return;
+            }
+
+            try 
+            {
+                using var fileStream = File.OpenRead(uploadState.FilePath);
+                byte[] buffer = new byte[ChunkSize];
+
+                for (int chunkIndex = 0; chunkIndex < uploadState.TotalChunks; chunkIndex ++)
+                {
+                    if (_canceledUploads.Contains(transferId))
+                    {
+                        // Gửi UploadComplete với hash random để client cleanup bằng hash mismatch
+                        SendRequest(new FileManagerRequest
+                        {
+                            OperationType = FileManagerOperationType.UploadComplete,
+                            UploadInfo = new FileUploadInfo
+                            {
+                                TransferId = transferId,
+                                TargetPath = Path.Combine(_currentPath, Path.GetFileName(uploadState.FilePath)),
+                                FileHash = Guid.NewGuid().ToString("N")
+                            },
+                            ClientId = _connection.Id
+                        });
+                        CleanupUpload(transferId);
+                        return;
+                    }
+
+                    int bytesRead = await fileStream.ReadAsync(buffer, 0, ChunkSize);
+                    if (bytesRead == 0) 
+                    {
+                        break;
+                    }
+
+                    byte[] chunkData = new byte[bytesRead];
+                    Array.Copy(buffer, 0, chunkData, 0, bytesRead);
+                    bool isFinalChunk = (chunkIndex == uploadState.TotalChunks - 1);
+
+                    var uploadInfo = new FileUploadInfo
+                    {
+                        TransferId = transferId,
+                        TargetPath = Path.Combine(_currentPath, Path.GetFileName(uploadState.FilePath)),
+                        ChunkIndex = chunkIndex,
+                        TotalChunks = uploadState.TotalChunks,
+                        Data = chunkData,
+                        IsFinalChunk = isFinalChunk,
+                        FileName = Path.GetFileName(uploadState.FilePath),
+                        FileHash = chunkIndex == 0 ? uploadState.FileHash : null
+                    };
+
+                    var chunkRequest = new FileManagerRequest
+                    {
+                        OperationType = FileManagerOperationType.UploadChunk,
+                        UploadInfo = uploadInfo,
+                        ClientId = _connection.Id
+                    };
+
+                    bool chunkSent = false;
+                    Exception? lastErr = null;
+                    for (int attempt = 1; attempt <= 3 && !chunkSent; attempt++)
+                    {
+                        SendRequest(chunkRequest);
+
+                        var waiter = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                        _chunkWaiters[transferId] = waiter;
+                        var completedTask = await Task.WhenAny(waiter.Task, Task.Delay(TimeSpan.FromSeconds(10)));
+                        if (completedTask != waiter.Task)
+                        {
+                            lastErr = new TimeoutException("Chunk ACK timeout");
+                        }
+                        else
+                        {
+                            try
+                            {
+                                await waiter.Task;
+                                chunkSent = true;
+                            }
+                            catch (Exception ex)
+                            {
+                                lastErr = ex;
+                            }
+                        }
+
+                        _chunkWaiters.Remove(transferId);
+
+                        if (!chunkSent && attempt < 3)
+                        {
+                            await Task.Delay(200 * attempt); // backoff nhẹ
+                        }
+                    }
+
+                    if (!chunkSent)
+                    {
+                        CleanupUpload(transferId);
+                        MessageBox.Show($"Upload chunk failed: {lastErr?.Message}", "Upload Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        _uploadProgressBar!.Visible = false;
+                        _uploadProgressBar.Value = 0;
+                        _cancelUploadFileButton!.Enabled = false;
+                        return;
+                    }
+
+                    uploadState.SentChunks++;
+
+					int progress = (int)((uploadState.SentChunks * 100) / uploadState.TotalChunks);
+                    _statusLabel!.Text = $"Uploading: {uploadState.SentChunks}/{uploadState.TotalChunks} chunks ({progress}%)";
+                    _uploadProgressBar!.Value = Math.Min(progress, 100);
+
+                    // Small delay để tránh overwhelm network
+                    await Task.Delay(10);
+                }
+
+                var completeRequest = new FileManagerRequest
+                {
+                    OperationType = FileManagerOperationType.UploadComplete,
+                    UploadInfo = new FileUploadInfo
+                    {
+                        TransferId = transferId,
+                        TargetPath = Path.Combine(_currentPath, Path.GetFileName(uploadState.FilePath)),
+                        FileHash = uploadState.FileHash
+                    },
+                    ClientId = _connection.Id
+                };
+
+                SendRequest(completeRequest);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Upload failed: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                CleanupUpload(transferId);
+                _uploadProgressBar!.Visible = false;
+                _uploadProgressBar.Value = 0;
+                _cancelUploadFileButton!.Enabled = false;
+            }
+        }
+
+        private void CleanupUpload(string transferId)
+        {
+            _activeUploads.Remove(transferId);
+            _chunkWaiters.Remove(transferId);
+            _canceledUploads.Remove(transferId);
         }
     }
 }

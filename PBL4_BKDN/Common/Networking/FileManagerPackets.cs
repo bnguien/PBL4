@@ -15,6 +15,8 @@ namespace Common.Networking
         public string? NewName { get; set; } // For rename operations
         public string? SearchPattern { get; set; } // For search operations
         public string? SearchPath { get; set; } // For search operations
+        public string? TransferId { get; set; }
+        public FileUploadInfo? UploadInfo { get; set; } // For upload operations
         public bool IncludeHidden { get; set; } = false;
         public bool IncludeSystem { get; set; } = false;
     }

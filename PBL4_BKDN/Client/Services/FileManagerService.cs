@@ -1,15 +1,21 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Models;
 using Common.Networking;
+using Common.Utils;
 
 namespace Client.Services
 {
     public sealed class FileManagerService
     {
+        private readonly Dictionary<string, FileStream> _activeUploads = new();
+        private readonly Dictionary<string, int> _expectedChunkIndex = new();
+        private readonly Dictionary<string, CancellationTokenSource> _cancellationSources = new();
+        private readonly TimeSpan UploadTimeout = TimeSpan.FromMinutes(10);
+
         public async Task<FileManagerModel> ProcessRequestAsync(FileManagerRequest request)
         {
             var model = new FileManagerModel
@@ -43,6 +49,15 @@ namespace Client.Services
                         break;
                     case FileManagerOperationType.CreateDirectory:
                         model = await CreateDirectoryAsync(request.TargetPath ?? "");
+                        break;
+                    case FileManagerOperationType.UploadStart:
+                        model = await UploadStartAsync(request.TransferId ?? "", request.TargetPath ?? "");
+                        break;
+                    case FileManagerOperationType.UploadChunk:
+                        model = await UploadChunkAsync(request.UploadInfo ?? new FileUploadInfo());
+                        break;
+                    case FileManagerOperationType.UploadComplete:
+                        model = await UploadCompleteAsync(request.UploadInfo ?? new FileUploadInfo());
                         break;
                     default:
                         throw new NotSupportedException($"Operation type {request.OperationType} is not supported");
@@ -486,5 +501,214 @@ namespace Client.Services
                 return model;
             });
         }
+        // Start a new upload session -> Client prepare FileStream and Path to save the file 
+        private async Task<FileManagerModel> UploadStartAsync(String transferId, String targetPath)
+        {
+			return await Task.Run(() =>
+            {
+                var model = new FileManagerModel
+                {
+                    ClientId = Guid.NewGuid().ToString(),
+                    ClientName = Environment.MachineName,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                try {
+                    if (_activeUploads.ContainsKey(transferId))
+                    {
+                        throw new InvalidOperationException($"Upload session ID '{transferId}' already active.");
+                    }
+
+                    var cts = new CancellationTokenSource();
+                    _cancellationSources.Add(transferId, cts);
+
+                    _ = Task.Delay(UploadTimeout, cts.Token).ContinueWith(t =>
+                    {
+                        if (t.IsCanceled) return;
+                        CleanupUploadSession(transferId, "Upload timed out after 10 minutes.");
+                    }, TaskContinuationOptions.None);
+
+                    var fileStream = File.Create(targetPath);
+                    _activeUploads.Add(transferId, fileStream);
+                    _expectedChunkIndex.Add(transferId, 0);
+                    model.OperationResult = new FileManagerOperationResult
+                    {
+                        OperationType = FileManagerOperationType.UploadStart,
+                        Success = true,
+                        TargetPath = targetPath,
+                        TransferId = transferId
+                    };
+                } 
+                catch (Exception ex)
+                {
+                    _activeUploads.Remove(transferId, out var streamToRemove);
+                    streamToRemove?.Dispose();
+                    model.OperationResult = new FileManagerOperationResult
+                    {
+                        OperationType = FileManagerOperationType.UploadStart,
+                        Success = false,
+                        ErrorMessage = ex.Message,
+                        TargetPath = targetPath
+                    };
+                }
+
+                return model;
+            });
+        }
+
+        private async Task<FileManagerModel> UploadChunkAsync(FileUploadInfo uploadInfo) 
+        {
+            return await Task.Run(() =>
+            {
+                var model = new FileManagerModel
+                {
+                    ClientId = Guid.NewGuid().ToString(),
+                    ClientName = Environment.MachineName,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                try 
+                {
+                    if (!_activeUploads.TryGetValue(uploadInfo.TransferId, out var fileStream))
+                    {
+                        throw new KeyNotFoundException($"Active upload session ID '{uploadInfo.TransferId}' not found.");
+                    }
+
+                    int expectedIndex = _expectedChunkIndex[uploadInfo.TransferId]++;
+                    if (expectedIndex != uploadInfo.ChunkIndex)
+                    {
+                        throw new InvalidOperationException($"Expected chunk index {expectedIndex} but received {uploadInfo.ChunkIndex}.");
+                    }
+
+                    fileStream.Write(uploadInfo.Data, 0, uploadInfo.Data.Length);
+                    model.OperationResult = new FileManagerOperationResult
+                    {
+                        OperationType = FileManagerOperationType.UploadChunk,
+                        Success = true,
+                        TargetPath = uploadInfo.TargetPath,
+                        TransferId = uploadInfo.TransferId
+                    };
+					
+				}
+                catch (Exception ex)
+                {
+                    _activeUploads.Remove(uploadInfo.TransferId, out var streamToRemove);
+                    streamToRemove?.Dispose();
+                    model.OperationResult = new FileManagerOperationResult
+                    {
+                        OperationType = FileManagerOperationType.UploadChunk,
+                        Success = false,
+                        ErrorMessage = ex.Message,
+                        TargetPath = uploadInfo.TargetPath,
+                    };
+                }
+                return model;
+            });
+        }
+
+        private async Task<FileManagerModel> UploadCompleteAsync(FileUploadInfo uploadInfo) 
+        {
+            return await Task.Run(() =>
+            {
+                var model = new FileManagerModel
+                {
+                    ClientId = Guid.NewGuid().ToString(),
+                    ClientName = Environment.MachineName,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                string targetPath = uploadInfo.TargetPath;
+                string transferId = uploadInfo.TransferId;
+                try
+                {
+                    if (!_activeUploads.TryGetValue(uploadInfo.TransferId, out var fileStream))
+                    {
+                        throw new KeyNotFoundException($"Active upload session ID '{uploadInfo.TransferId}' not found.");
+                    }
+
+				    if (_activeUploads.Remove(uploadInfo.TransferId, out fileStream))
+                    {
+                        _expectedChunkIndex.Remove(uploadInfo.TransferId);
+						_cancellationSources.Remove(transferId, out var cts); 
+						cts?.Cancel();
+						cts?.Dispose();
+
+						fileStream.Close();
+						fileStream.Dispose();
+					}
+					else
+					{
+						throw new InvalidOperationException("FileStream cleanup failed or already completed.");
+					}
+
+                    string calculatedHash;
+                    using (var stream = File.OpenRead(targetPath))
+                    {
+                        calculatedHash = HashHelper.ComputeSHA256(stream);
+                    }
+
+                    if (!HashHelper.CompareSHA256Hashes(calculatedHash, uploadInfo.FileHash ?? ""))
+                    {
+                        File.Delete(targetPath);
+                        throw new InvalidOperationException(
+                            $"Hash mismatch! Expected: {uploadInfo.FileHash}, Calculated: {calculatedHash}. File deleted.");
+					}
+
+					model.OperationResult = new FileManagerOperationResult
+					{
+						OperationType = FileManagerOperationType.UploadComplete,
+						Success = true,
+						TargetPath = targetPath,
+						TransferId = transferId,
+                        CalculatedFileHash = calculatedHash
+					};
+				}
+                catch (Exception ex)
+                {
+					CleanupUploadSession(transferId, $"Error during completion: {ex.Message}");
+
+					model.OperationResult = new FileManagerOperationResult
+					{
+						OperationType = FileManagerOperationType.UploadComplete,
+						Success = false,
+						ErrorMessage = ex.Message,
+						TargetPath = targetPath,
+						TransferId = transferId
+					};
+				}
+
+                return model;
+            });
+        }
+        private void CleanupUploadSession(string transferId, string reason)
+        {
+            //1. Hủy Timer/Task
+            if (_cancellationSources.Remove(transferId, out var cts))
+            {
+                cts.Cancel();
+                cts.Dispose();
+            }
+
+            //2. Đóng FileStream
+            if (_activeUploads.Remove(transferId, out var fileStream))
+            {
+                Console.WriteLine($"Cleanup: Upload {transferId} failed ({reason}). Deleting file...");
+
+                string filePath = fileStream.Name;
+                fileStream.Close();
+                fileStream.Dispose();
+
+                try
+                {
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
+                } catch { }
+			}
+
+            _expectedChunkIndex.Remove(transferId);
+        }
     }
+
 }
